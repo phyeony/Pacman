@@ -1,5 +1,5 @@
 /********************************************************************
- *  File Name: test_ledMatrix.c
+ *  File Name: ledDisplay.c
  *  Description: A simple program to display pattern on LED Matrix
  *  
  *  About 80% of the code converted from Python to C, source:
@@ -10,6 +10,9 @@
  *  
  *  Modified by: Raymond Chan
  *  Date: 2 August 2018
+ * 
+ *  Modified by: Pacman team
+ *  Date: 19 Feb 2023
  ********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +22,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
+#include "utility.h"
+#include "gameManager.h"
 
 /*** GLOBAL VARIABLE ***/
 /* GPIO PATH */
@@ -46,8 +52,7 @@
 #define DELAY_IN_US 5
 #define DELAY_IN_SEC 0
 
-/* LED Screen Values */
-static int screen[16][32];
+static pthread_t id;
 
 /* FILES HANDLER */
 static int fileDesc_red1;
@@ -63,21 +68,6 @@ static int fileDesc_a;
 static int fileDesc_b;
 static int fileDesc_c;
 
-
-
-// wait a number of milliseconds
-void sleepForMs(long long delayInMs)
-{
-    const long long NS_PER_MS = 1000 * 1000;
-    const long long NS_PER_SECOND = 1000000000;
-
-    long long delayNS = delayInMs * NS_PER_MS;
-    int seconds = delayNS / NS_PER_SECOND;
-    int nanoseconds = delayNS % NS_PER_SECOND;
-
-    struct timespec reqDelay = {seconds, nanoseconds};
-    nanosleep(&reqDelay, (struct timespec *)NULL);
-}
 
 /**
  * exportAndOut
@@ -103,7 +93,7 @@ static void exportAndOut(int pinNum)
         }
         fprintf(gpioExP, "%d", pinNum);
         fclose(gpioExP);
-        sleepForMs(1000);
+        Utility_sleepForMs(1000);
         gpioDirP = fopen(fileNameBuffer, "w");
     }
     if(gpioDirP == NULL) {
@@ -124,10 +114,10 @@ static int getFileDescriptor(int pinNum) {
 }
 
 /**
- * ledMatrix_setupPins
+ * ledDisplay_setupPins
  * Setup the pins used by the led matrix, by exporting and set the direction to out
  */
-static void ledMatrix_setupPins(void)
+static void ledDisplay_setupPins(void)
 {   
     // !Upper led
     exportAndOut(RED1_PIN);
@@ -165,10 +155,10 @@ static void ledMatrix_setupPins(void)
 }
 
 /** 
- *  ledMatrix_clock
+ *  ledDisplay_clock
  *  Generate the clock pins
  */
-static void ledMatrix_clock(void)
+static void ledDisplay_clock(void)
 {
     // Bit-bang the clock gpio
     // Notes: Before program writes, must make sure it's on the 0 index
@@ -181,10 +171,10 @@ static void ledMatrix_clock(void)
 }
 
 /**
- *  ledMatrix_latch
+ *  ledDisplay_latch
  *  Generate the latch pins
  */
-static void ledMatrix_latch(void)
+static void ledDisplay_latch(void)
 {
     lseek(fileDesc_latch, 0, SEEK_SET);
     write(fileDesc_latch, "1", 1);
@@ -195,13 +185,13 @@ static void ledMatrix_latch(void)
 }
 
 /**
- *  ledMatrix_bitsFromInt
+ *  ledDisplay_bitsFromInt
  *  Convert integer passed on into bits and put in array
  *  @params:
  *      int * arr: pointer to array to be filled with bits
  *      int input: integer to be converted to bits
  */
-static void ledMatrix_bitsFromInt(int * arr, int input)
+static void ledDisplay_bitsFromInt(int * arr, int input)
 {
     arr[0] = input & 1;
 
@@ -215,16 +205,16 @@ static void ledMatrix_bitsFromInt(int * arr, int input)
 }
 
 /**
- *  ledMatrix_setRow
+ *  ledDisplay_setRow
  *  Set LED Matrix row
  *  @params:
  *      int rowNum: the rowNumber to be inputted to row pins
  */
-static void ledMatrix_setRow(int rowNum)
+static void ledDisplay_setRow(int rowNum)
 {
     // Convert rowNum single bits from int
     int arr[3] = {0, 0, 0};
-    ledMatrix_bitsFromInt(arr, rowNum);
+    ledDisplay_bitsFromInt(arr, rowNum);
 
     // Write on the row pins
     char a_val[2];
@@ -247,15 +237,15 @@ static void ledMatrix_setRow(int rowNum)
 }
 
 /**
- *  ledMatrix_setColourTop
+ *  ledDisplay_setColourTop
  *  Set the colour of the top part of the LED
  *  @params:
  *      int colour: colour to be set
  */
-static void ledMatrix_setColourTop(int colour)
+static void ledDisplay_setColourTop(int colour)
 {
     int arr[3] = {0, 0, 0};
-    ledMatrix_bitsFromInt(arr, colour);
+    ledDisplay_bitsFromInt(arr, colour);
 
     // Write on the colour pins
     char red1_val[2];
@@ -277,15 +267,15 @@ static void ledMatrix_setColourTop(int colour)
 }
 
 /**
- *  ledMatrix_setColourBottom
+ *  ledDisplay_setColourBottom
  *  Set the colour of the bottom part of the LED
  *  @params:
  *      int colour: colour to be set
  */
-static void ledMatrix_setColourBottom(int colour)
+static void ledDisplay_setColourBottom(int colour)
 {
     int arr[3] = {0,0,0};
-    ledMatrix_bitsFromInt(arr, colour);
+    ledDisplay_bitsFromInt(arr, colour);
 
     // Write on the colour pins
     char red2_val[2];
@@ -311,64 +301,55 @@ static void ledMatrix_setColourBottom(int colour)
     return;
 }
 /**
- *  ledMatrix_refresh
+ *  ledDisplay_refresh
  *  Fill the LED Matrix with the respective pixel colour
  */
-static void ledMatrix_refresh(void)
+static void ledDisplay_refresh(void)
 {
-    for ( int rowNum = 0; rowNum < 8; rowNum++ ) {
+    Tile gameMap[ROW_SIZE][COLUMN_SIZE];
+    for ( int rowNum = 0; rowNum < ROW_SIZE/2; rowNum++ ) {
         lseek(fileDesc_oe, 0, SEEK_SET);
         write(fileDesc_oe, "1", 1); 
-        ledMatrix_setRow(rowNum);
-        for ( int colNum = 0; colNum < 32;  colNum++) {
-            ledMatrix_setColourTop(screen[rowNum][colNum]);
-            ledMatrix_setColourBottom(screen[rowNum+8][colNum]);
-            ledMatrix_clock();
+        ledDisplay_setRow(rowNum);
+        GameManager_getMap(gameMap);
+        for ( int colNum = 0; colNum < COLUMN_SIZE;  colNum++) {
+            ledDisplay_setColourTop(gameMap[rowNum][colNum].color);
+            ledDisplay_setColourBottom(gameMap[rowNum+8][colNum].color);
+            ledDisplay_clock();
         }
-        ledMatrix_latch();
+        ledDisplay_latch();
         lseek(fileDesc_oe, 0, SEEK_SET);
         write(fileDesc_oe, "0", 1); 
         struct timespec reqDelay = {DELAY_IN_SEC, DELAY_IN_US}; // sleep for delay
     	nanosleep(&reqDelay, (struct timespec *) NULL);
-        // sleepForMs(1000);
     }
     return;
 }
 
-/**
- *  ledMatrix_setPixel
- *  Set the pixel selected on LED MAtrix with the colour selected
- *  @params:
- *      int x: x-axis
- *      int y: y-axis
- *      int colour: colour selected
- */
-static void ledMatrix_setPixel(int x, int y, int colour)
-{
-    screen[x][y] = colour;
-
-    return;
-}
-
-/*** MAIN ***/
-int main()
+static void *startDisplaying(void *args)
 {   
-    // Reset the screen
-    memset(screen, 0, sizeof(screen));
-
-    // Setup pins
-    ledMatrix_setupPins();
-   
-    for ( int i = 0; i < 16; i++ ) {
-        ledMatrix_setPixel(i, i, 1);
-        ledMatrix_setPixel(i, 32-1-i , 2);
-   }
-
-    printf("Starting the program\n");
     while(1) {
-        ledMatrix_refresh();
+        ledDisplay_refresh();
     }
- 
-    return 0;
+    return NULL;
+}
+
+void LedDisplay_init(void)
+{
+    printf("Init ledDisplay...\n");
+    // Setup pins
+    ledDisplay_setupPins();
+
+    if (pthread_create(&id, NULL, &startDisplaying, NULL) != 0)
+    {
+        perror("Failed to create a new thread...");
+    }
+
+}
+
+
+void LedDisplay_cleanup(void)
+{
+    pthread_join(id, NULL);
 }
 
