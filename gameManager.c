@@ -2,23 +2,31 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+#include <stdio.h>
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
+static Location pacmanLocation;
+// Init gameMap
+static Tile empty = {EMPTY, BLACK};
+static Tile pacman = {PACMAN, PINK};
+static Tile wall = {WALL, BLUE};
+static Tile ghost = {GHOST, RED};
+static Tile dot = {DOT, GREEN};
+static Tile powerDot = {POWER_DOT, YELLOW};
+
+static int foodCollected = 0;
+
+// Prototypes for helper functions
+static int compareTiles(Tile tile1, Tile tile2);
+int checkCollision(Location loc);
+void checkOutOfBounds(Location* loc);
 
 void GameManager_init()
 {
-    // Init gameMap
-    Tile empty = {EMPTY, BLACK};
-    Tile pacman = {PACMAN, YELLOW};
-    Tile wall = {WALL, BLUE};
-    Tile ghost = {GHOST, RED};
-    Tile dot = {DOT, GREEN};
-    Tile powerDot = {POWER_DOT, PINK};
-
     // Reset the screen
     memset(gameMap, 0, sizeof(gameMap));
-
+    // pacman start position: mapBottomLeft[4][15]
+    // 
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall, wall},
         {wall, dot, dot, dot, dot, dot, dot, dot, dot, dot, dot, dot, dot, dot, dot, wall},
@@ -69,9 +77,18 @@ void GameManager_init()
             gameMap[i+ROW_SIZE/2][j+COLUMN_SIZE/2]=mapBottomRight[i][j];
         }
     }
+    for (int i = 0; i<ROW_SIZE;i++){
+        for (int j = 0; j<COLUMN_SIZE;j++){
+            if (compareTiles(gameMap[i][j],pacman)){
+                pacmanLocation.row = i;
+                pacmanLocation.col = j;
+            }
+        }
+    }
 }
 
-void GameManager_getMap(Tile temp[][COLUMN_SIZE]){
+void GameManager_getMap(Tile temp[][COLUMN_SIZE])
+{
     pthread_mutex_lock(&mutex);
     {
         memcpy(temp, gameMap, ROW_SIZE * COLUMN_SIZE * sizeof(gameMap[0][0]));
@@ -79,6 +96,82 @@ void GameManager_getMap(Tile temp[][COLUMN_SIZE]){
     pthread_mutex_unlock(&mutex);
 }
 
+// moves Pacman in static game map. 
+void* GameManager_movePacman(Direction direction)
+{
+    Location newLoc;
+    // printf("Move pacman: %d\n",direction);
+    // edge cases: moving out of bounds, moving to next map segment
+    if (direction == UP){
+        newLoc.col = pacmanLocation.col;
+        newLoc.row = pacmanLocation.row+1;
+    }
+    else if (direction == DOWN){
+        newLoc.col = pacmanLocation.col;
+        newLoc.row = pacmanLocation.row-1;
+    }
+    else if (direction == LEFT){
+        newLoc.col = pacmanLocation.col+1;
+        newLoc.row = pacmanLocation.row;
+    }
+    else if (direction == RIGHT){
+        newLoc.col = pacmanLocation.col-1;
+        newLoc.row = pacmanLocation.row;
+    }
+    // printf("new loc:%d,%d!\n",newLoc.row,newLoc.col);
+    checkOutOfBounds(&newLoc);
+    int collision = checkCollision(newLoc);
+    if (collision==WALL){
+        // printf("wall!\n");
+        return NULL;
+    }
+    if (collision==DOT||collision==EMPTY){
+        pthread_mutex_lock(&mutex);
+        {
+            gameMap[pacmanLocation.row][pacmanLocation.col] = empty;
+            pacmanLocation = newLoc;
+            gameMap[newLoc.row][newLoc.col] = pacman;
+            // printf("tileType:%d\n",gameMap[pacmanLocation.row][pacmanLocation.col].tileType);
+        }
+        pthread_mutex_unlock(&mutex);
+    }
+    if (collision==DOT){
+        foodCollected++;
+    }
+    return NULL;
+}
+int checkCollision(Location loc)
+{
+    if (compareTiles(gameMap[loc.row][loc.col],wall)){
+        return WALL;
+    }
+    if (compareTiles(gameMap[loc.row][loc.col],dot)){
+        return DOT;
+    }
+    return EMPTY;
+}
+void checkOutOfBounds(Location* loc)
+{
+    if (loc->row == ROW_SIZE) {
+        loc->row = 0;
+    }
+    else if (loc->row == -1){
+        loc->row = ROW_SIZE-1;
+    }
+    else if (loc->col == COLUMN_SIZE){
+        loc->col = 0;
+    }
+    else if (loc->col==-1){
+        loc->col = COLUMN_SIZE-1;
+    }
+}
+int compareTiles(Tile tile1, Tile tile2)
+{
+    if (tile1.tileType == tile2.tileType && tile1.color == tile2.color){
+        return 1;
+    }
+    return 0;
+}
 void GameManager_cleanup()
 {
 }
