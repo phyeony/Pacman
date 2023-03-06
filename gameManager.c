@@ -142,10 +142,17 @@ void* GameManager_movePacman(Direction direction)
 }
 int checkCollision(Location loc)
 {
-    if (compareTiles(gameMap[loc.row][loc.col],wall)){
+    Tile tile;
+    pthread_mutex_lock(&mutex);
+    {
+        tile = gameMap[loc.row][loc.col];
+    }
+    pthread_mutex_unlock(&mutex);
+
+    if (compareTiles(tile, wall)){
         return WALL;
     }
-    if (compareTiles(gameMap[loc.row][loc.col],dot)){
+    if (compareTiles(tile,dot)){
         return DOT;
     }
     return EMPTY;
@@ -167,7 +174,7 @@ void checkOutOfBounds(Location* loc)
 }
 int compareTiles(Tile tile1, Tile tile2)
 {
-    if (tile1.tileType == tile2.tileType && tile1.color == tile2.color){
+    if (tile1.tileType == tile2.tileType){
         return 1;
     }
     return 0;
