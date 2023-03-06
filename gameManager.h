@@ -10,7 +10,8 @@
  *  Each bit represents one of RGB. For example, WHITE(=7) is converted to [1,1,1] and assigned to [R,G,B] respectively.
  *  Thus, the color is white.
  */
-typedef enum {
+typedef enum 
+{
     BLACK=0,
     RED,
     GREEN,
@@ -32,14 +33,35 @@ typedef enum
     EMPTY
 } TileType;
 
+typedef enum
+{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+} Direction;
+
+typedef enum
+{
+    topLeft,
+    topRight,
+    bottomLeft,
+    bottomRight
+} MapSegment;
+
 typedef struct
 {
     TileType tileType;
     Color color;
 } Tile;
 
+typedef struct {
+    int row;
+    int col;
+} Location;
+
 void GameManager_init(void);
 void GameManager_getMap(Tile map[][COLUMN_SIZE]);
 void GameManager_cleanup(void);
-
+void* GameManager_movePacman(Direction direction);
 #endif

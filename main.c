@@ -3,15 +3,15 @@
 #include "gameManager.h"
 #include "ledDisplay.h"
 #include "utility.h"
-
+#include "joycon.h"
 
 int main() {
     GameManager_init();
     Utility_sleepForMs(100);
     LedDisplay_init();
-
+    Joycon_init();
     LedDisplay_cleanup();
     GameManager_cleanup();
-
+    Joycon_cleanup();
     return 0;
 }

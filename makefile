@@ -1,5 +1,5 @@
-TARGETS= main testLedMatrix joycon
-DEPS= gameManager.c ledDisplay.c utility.c
+TARGETS= main testLedMatrix
+DEPS= gameManager.c ledDisplay.c utility.c joycon.c 
 
 OUTFILE = game
 OUTDIR = $(HOME)/cmpt433/public/myApps
