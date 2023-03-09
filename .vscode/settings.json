@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "gamemanager.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "ghost.h": "c"
     }
 }

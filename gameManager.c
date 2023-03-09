@@ -1,11 +1,25 @@
 #include "gameManager.h"
+#include "ghost.h"
+#include "map.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include <stdio.h>
+
+
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
 static Location pacmanLocation;
+
+static const Location ghostHouseEntrance = { 5, 14 };
+static const Location ghostHouse[GHOST_NUM-1] = {{7,13}, {7,14}, {7,15}};
+static Ghost ghosts[GHOST_NUM]={
+    {.name = "ghostA", .mode = PAUSED,},
+    {.name = "ghostB", .mode = PAUSED,},
+    {.name = "ghostC", .mode = PAUSED,},
+    {.name = "ghostD", .mode = PAUSED,},
+};
+
 // Init gameMap
 static Tile empty = {EMPTY, BLACK};
 static Tile pacman = {PACMAN, PINK};
@@ -20,6 +34,7 @@ static int foodCollected = 0;
 static int compareTiles(Tile tile1, Tile tile2);
 int checkCollision(Location loc);
 void checkOutOfBounds(Location* loc);
+static void GameManger_moveGhost(Ghost *);
 
 void GameManager_init()
 {
@@ -85,7 +100,16 @@ void GameManager_init()
             }
         }
     }
+
+    //Init Ghost
+    ghosts[0].location = ghostHouseEntrance;
+    for(int i =1; i <GHOST_NUM; i++) {
+        ghosts[i].location = ghostHouse[i-1];
+    }
+    Ghost_registerCallback(ghosts, GHOST_NUM, &GameManger_moveGhost);
 }
+
+
 
 void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
@@ -95,6 +119,25 @@ void GameManager_getMap(Tile temp[][COLUMN_SIZE])
     }
     pthread_mutex_unlock(&mutex);
 }
+
+static void GameManger_moveGhost(Ghost *currentGhost) 
+{
+    switch (currentGhost->mode)
+    {
+        case CHASE:
+            // do something
+            break;
+        case FRIGHTENED:
+            // Algo. Check the timer.
+            break;
+        case PAUSED:
+            // move
+            break;
+        default:
+            break;
+    }
+}
+
 
 // moves Pacman in static game map. 
 void* GameManager_movePacman(Direction direction)

@@ -1,6 +1,7 @@
 #ifndef _GAMEMANAGER_H_
 #define _GAMEMANAGER_H_
 
+#include "map.h"
 #define ROW_SIZE 16
 #define COLUMN_SIZE 32
 
@@ -10,29 +11,6 @@
  *  Each bit represents one of RGB. For example, WHITE(=7) is converted to [1,1,1] and assigned to [R,G,B] respectively.
  *  Thus, the color is white.
  */
-typedef enum 
-{
-    BLACK=0,
-    RED,
-    GREEN,
-    YELLOW,
-    BLUE,
-    PINK,
-    LIGHT_BLUE,
-    WHITE,
-    END,  // This will display BLACK.
-} Color;
-
-typedef enum
-{
-    WALL,
-    PACMAN,
-    DOT,
-    POWER_DOT,
-    GHOST,
-    EMPTY
-} TileType;
-
 typedef enum
 {
     UP,
@@ -41,27 +19,9 @@ typedef enum
     RIGHT
 } Direction;
 
-typedef enum
-{
-    topLeft,
-    topRight,
-    bottomLeft,
-    bottomRight
-} MapSegment;
-
-typedef struct
-{
-    TileType tileType;
-    Color color;
-} Tile;
-
-typedef struct {
-    int row;
-    int col;
-} Location;
-
 void GameManager_init(void);
 void GameManager_getMap(Tile map[][COLUMN_SIZE]);
 void GameManager_cleanup(void);
-void* GameManager_movePacman(Direction direction);
+void *GameManager_movePacman(Direction direction);
+
 #endif
