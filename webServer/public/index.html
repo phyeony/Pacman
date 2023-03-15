@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!-- saved from url=(0075)https://opencoursehub.cs.sfu.ca/bfraser/solutions/433/as3/sample_index.html -->
+<html lang="en">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>BeagleBone Beat-Box</title>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src='https://code.jquery.com/jquery-1.8.0.min.js'></script>
+	<script src="./javascripts/beatBoxUi.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="./style.css">
+	<script type="module" src="chrome-extension://jdkknkkbebbapilgoeccciglkfbmbnfm/hook.js"></script>
+</head>
+
+<body class="vsc-initialized" data-new-gr-c-s-check-loaded="14.1098.0" data-gr-ext-installed="">
+	<form>
+		<h1>Pacman</h1>
+		<div>by JooYoung, Vy, and HyeonYoung</div>
+
+		<div class="flexColumnContainer">
+			<!-- first box -->
+			<div class="container" id="upper">
+				<div id="modediv">
+					<table id="game-map"></table>
+					<h3>Volume</h3>
+					<p>
+						<input type="button" id="volumeDown" value=" - ">
+						<input type="text" id="volumeid" value="80" size="3" readonly="">
+						<input type="button" id="volumeUp" value=" + ">
+						(0 - 100)
+					</p>
+				</div>
+
+
+				</p>
+				<div id="control">
+					<p>
+						<input type="button" id="stop" value="Terminate Program">
+					</p>
+				</div>
+			</div>
+			<!-- second box -->
+			<div id="flexRowContainer">
+				<div class="container left-box">
+					<h2>Guide</h2>
+					<p>
+					<div class="item-container">
+						<div class="color-box" id="blue"></div>
+						<div class="description">
+							<h2>Wall</h2>
+							<p></p>
+						</div>
+					</div>
+					<div class="item-container">
+						<div class="color-box" id="red"></div>
+						<div class="description">
+							<h2>Ghost</h2>
+							<p>Run away from them!</p>
+						</div>
+					</div>
+					<div class="item-container">
+						<div class="color-box" id="green"></div>
+						<div class="description">
+							<h2>Dot</h2>
+							<p>Eat them to score!</p>
+						</div>
+					</div>
+					<div class="item-container">
+						<div class="color-box" id="pink"></div>
+						<div class="description">
+							<h2>Pacman</h2>
+							<p></p>
+						</div>
+					</div>
+					<div class="item-container">
+						<div class="color-box" id="yellow"></div>
+						<div class="description">
+							<h2>Power Dot</h2>
+							<p>Eat them to and you can eat Ghosts!</p>
+						</div>
+					</div>
+					<div class="item-container">
+						<div class="color-box" id="black"></div>
+						<div class="description">
+							<h2>Empty</h2>
+							<p></p>
+						</div>
+					</div>
+					<!-- <div class="item-container">
+					<div class="color-box" id="white"></div>
+					<div class="description">
+						<h2>Heading</h2>
+						<p>Text goes here</p>
+					</div>
+				</div> -->
+				</div>
+
+				<div class="right-box flexColumnContainer">
+					<div class="container score-box">
+						<h2>Current Score</h2>
+						<text id="score">0</text>
+						<h2>High Score</h2>
+						<text id="score">3000</text>
+					</div>
+
+					<div id="error-box">
+						<h2>Server Error</h2>
+						<p><span id="error-message"></span>Please resolve error before continuing.</p>
+					</div>
+				</div>
+			</div>
+	
+		</div>
+	</form>
+</body>
+
+</html>
