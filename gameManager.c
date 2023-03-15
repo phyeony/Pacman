@@ -1,6 +1,8 @@
 #include "gameManager.h"
 #include "ghost.h"
 #include "map.h"
+#include "ledDisplay.h"
+#include "joycon.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
@@ -34,7 +36,7 @@ static int foodCollected = 0;
 static int compareTiles(Tile tile1, Tile tile2);
 int checkCollision(Location loc);
 void checkOutOfBounds(Location* loc);
-static void GameManger_moveGhost(Ghost *);
+// static void GameManager_moveGhost(Ghost *);
 
 void GameManager_init()
 {
@@ -106,10 +108,11 @@ void GameManager_init()
     for(int i =1; i <GHOST_NUM; i++) {
         ghosts[i].location = ghostHouse[i-1];
     }
-    Ghost_registerCallback(ghosts, GHOST_NUM, &GameManger_moveGhost);
+    // Ghost_registerCallback(ghosts, GHOST_NUM, &GameManager_moveGhost);
+    Joycon_registerCallback(&GameManager_movePacman, &GameManager_cleanup);
+    LEDDisplay_registerCallback(&GameManager_getMap);
+
 }
-
-
 
 void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
@@ -120,27 +123,27 @@ void GameManager_getMap(Tile temp[][COLUMN_SIZE])
     pthread_mutex_unlock(&mutex);
 }
 
-static void GameManger_moveGhost(Ghost *currentGhost) 
-{
-    switch (currentGhost->mode)
-    {
-        case CHASE:
-            // do something
-            break;
-        case FRIGHTENED:
-            // Algo. Check the timer.
-            break;
-        case PAUSED:
-            // move
-            break;
-        default:
-            break;
-    }
-}
+// static void GameManager_moveGhost(Ghost *currentGhost) 
+// {
+//     switch (currentGhost->mode)
+//     {
+//         case CHASE:
+//             // do something
+//             break;
+//         case FRIGHTENED:
+//             // Algo. Check the timer.
+//             break;
+//         case PAUSED:
+//             // move
+//             break;
+//         default:
+//             break;
+//     }
+// }
 
 
 // moves Pacman in static game map. 
-void* GameManager_movePacman(Direction direction)
+void GameManager_movePacman(Direction direction)
 {
     Location newLoc;
     // printf("Move pacman: %d\n",direction);
@@ -166,7 +169,7 @@ void* GameManager_movePacman(Direction direction)
     int collision = checkCollision(newLoc);
     if (collision==WALL){
         // printf("wall!\n");
-        return NULL;
+        return;
     }
     if (collision==DOT||collision==EMPTY){
         pthread_mutex_lock(&mutex);
@@ -181,7 +184,7 @@ void* GameManager_movePacman(Direction direction)
     if (collision==DOT){
         foodCollected++;
     }
-    return NULL;
+    return;
 }
 int checkCollision(Location loc)
 {

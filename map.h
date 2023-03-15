@@ -1,7 +1,8 @@
 // A game map module
 #ifndef _MAP_H_
 #define _MAP_H_
-
+#define ROW_SIZE 16
+#define COLUMN_SIZE 32
 typedef enum 
 {
     BLACK=0,
