@@ -17,5 +17,5 @@ void GameManager_init(void);
 void GameManager_getMap(Tile map[][COLUMN_SIZE]);
 void GameManager_cleanup(void);
 void GameManager_movePacman(Direction direction);
-
+void GameManager_moveGhost();
 #endif

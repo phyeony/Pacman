@@ -29,7 +29,8 @@ typedef struct Ghost
 } Ghost;
 
 
-//void Ghost_init();
-void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback callback);
+void Ghost_init();
+void Ghost_cleanup();
+// void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback callback);
 
 #endif

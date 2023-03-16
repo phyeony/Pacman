@@ -82,14 +82,15 @@ void *joyconThread()
             break;
         }
         // print hex values
-        for (int i = 0; i < 20; i++)
-        {
-            printf("%x ", data[i]);
-        }
-        printf("\n");
+        // for (int i = 0; i < 20; i++)
+        // {
+        //     printf("%x ", data[i]);
+        // }
+        // printf("\n");
         if (data[3] == 0x20)
         {
             (*shutdownCb)();
+            printf("exit pressed\n");
         }
         if (data[8] == 0xff && data[9] == 0x7f)
         {
@@ -111,7 +112,7 @@ void *joyconThread()
             (*cb)(DOWN);
             // printf("down\n");
         }
-        Utility_sleepForMs(190);
+        Utility_sleepForMs(150);
     }
 
     return 0;
