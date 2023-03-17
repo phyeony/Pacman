@@ -24,7 +24,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "utility.h"
-#include "gameManager.h"
+#include "ledDisplay.h"
 
 /*** GLOBAL VARIABLE ***/
 /* GPIO PATH */
@@ -68,6 +68,7 @@ static int fileDesc_a;
 static int fileDesc_b;
 static int fileDesc_c;
 
+static LEDDisplayCallback getMap;
 
 /**
  * exportAndOut
@@ -75,6 +76,10 @@ static int fileDesc_c;
  * @params
  *  int pinNum: the pin number to be exported and set for output
  */
+void LEDDisplay_registerCallback(LEDDisplayCallback getMapCb)
+{
+    getMap = getMapCb;
+}
 static void exportAndOut(int pinNum)
 {
     // Change the direction into out
@@ -311,7 +316,7 @@ static void ledDisplay_refresh(void)
         lseek(fileDesc_oe, 0, SEEK_SET);
         write(fileDesc_oe, "1", 1); 
         ledDisplay_setRow(rowNum);
-        GameManager_getMap(gameMap);
+        getMap(gameMap);
         for ( int colNum = 0; colNum < COLUMN_SIZE;  colNum++) {
             ledDisplay_setColourTop(gameMap[rowNum][colNum].color);
             ledDisplay_setColourBottom(gameMap[rowNum+8][colNum].color);

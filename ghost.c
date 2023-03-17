@@ -1,32 +1,34 @@
 #include "ghost.h"
-//#include <pthread.h>
-
+#include "gameManager.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 //Local headers
 // static void *startMovingGhosts(void *args);
 
-// static int running;
-// static pthread_t id;
-
-void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback newCallback)
-{
-    for(int i=0; i<size; i++) {
-        ghosts[i].movementCallback = newCallback;
-    }
-}
-
-// void Ghost_init(Ghost ghost, GhostCallback callback)
+static int running = 1;
+static pthread_t id;
+void* startMovingGhosts();
+// void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback newCallback)
 // {
-    
-// }
-
-// static void *startMovingGhosts(void *args)
-// {
-//     // while(running){
-//     //     for(int i=0; i<GHOST_NUM; i++) {
-//     //         GameManager_moveGhost(ghosts[i].mode, ghosts[i].location);
-//     //     }
+//     // for(int i=0; i<size; i++) {
+//     //     ghosts[i].movementCallback = newCallback;
 //     // }
 // }
+
+void Ghost_init()
+{
+    pthread_create(&id, NULL, startMovingGhosts, NULL);
+}
+
+void* startMovingGhosts()
+{
+    while (running) {
+        GameManager_moveGhost();
+        Utility_sleepForMs(500);
+    }
+    return NULL;
+}
 
 // void Ghost_init()
 // {
@@ -44,8 +46,8 @@ void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback newCallback)
 //     }
 // }
 
-// void Ghost_cleanup()
-// {
-//     running = 0;
-//     pthread_join(id, NULL);
-// }
+void Ghost_cleanup()
+{
+    running = 0;
+    pthread_join(id, NULL);
+}
