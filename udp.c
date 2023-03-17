@@ -17,7 +17,7 @@
 
 #define PORT 12345
 #define RECEIVER_PORT 3000
-#define MAX_LEN 28700
+#define MAX_LEN 100000
 #define INT_BASE 10
 #define TEMP_ITEM_LENGTH 350
 #define SAMPLE_ITEM_SIZE 7
@@ -41,10 +41,7 @@ static void replyToMessage(char *);
 
 typedef enum
 {
-    UPDATE_TEMPO = 0,
-    UPDATE_VOLUME,
-    UPDATE_DRUM_BEAT_MODE,
-    PLAY_DRUM_SOUND,
+    UPDATE_VOLUME = 0,
     TERMINATE,
     UPDATE_DATA,
     HEALTH_CHECK,
@@ -83,16 +80,32 @@ static void *updateVolume(char *args)
 // args = " "
 static void *updateData(char *args)
 {
-    char answerString = "updateMapAnswer ";
-    size_t answerStringLength = strlen(answerString);
-    int gameMap[ROW_SIZE][COLUMN_SIZE];
+    printf("UPDATE!\n");
+    const char *answerString = "updateMapAnswer ";
+    //size_t answerStringLength = strlen(answerString);
+    Tile gameMap[ROW_SIZE][COLUMN_SIZE];
     GameManager_getMap(gameMap);
-    // flattens 2d array to 1d array
-    uint8_t data[ROW_SIZE * COLUMN_SIZE * sizeof(uint8_t)];
-    memcpy(data, gameMap, sizeof(data));
 
-    memcpy(messageToReply, answerString, answerStringLength);
-    memcpy(messageToReply + answerStringLength, data, sizeof(data));
+    size_t dataLength = ROW_SIZE * COLUMN_SIZE * sizeof(int);
+    int data[dataLength];
+    // Loop through the original array and extract the enum values and flatten an array
+    for (int i = 0; i < ROW_SIZE; i++) {
+        for (int j = 0; j < COLUMN_SIZE; j++) {
+            // Assign the enum value
+            data[i * COLUMN_SIZE + j] = gameMap[i][j].color;
+        }
+    }
+
+    snprintf(messageToReply, MAX_LEN, "%s", answerString);
+    for (int i = 0; i < ROW_SIZE * COLUMN_SIZE; i++) {
+        printf(" %d, ",data[i]);
+        char digit = '0' + data[i]; // Convert integer to corresponding character
+        strncat(messageToReply, &digit, 1); // Append character to message
+    }
+    printf("Size of data: %d \n", dataLength);
+    for (int i = 0; messageToReply[i] != '\0'; i++) {
+        printf("%c ", messageToReply[i]);
+    }
     return NULL;
 }
 
@@ -182,6 +195,7 @@ static void replyToMessage(char *messageReceived)
     sin_len = sizeof(sinRemote); // not sure if this is needed. might've already been assigned in recvfrom.
     int bytesLeftInReply = 0;
     for(int i=0; i<MAX_LEN; i++) {
+        printf("%c ", messageToReply[i]);
         if(messageToReply[i]=='\0'){
             break;
         }

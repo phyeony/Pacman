@@ -1,0 +1,14 @@
+{
+    "name": "pacman",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "setup": "npm install --prefix webServer",
+      "node": "npm start --prefix webServer"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+  }
+  

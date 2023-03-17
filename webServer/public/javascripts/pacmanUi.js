@@ -40,7 +40,7 @@ const COLOR_ARRAY = [
 let gameMap = new Array(NUM_ROW).fill(0).map(() => new Array(NUM_COLUMN).fill(0));
 
 
-function populateMap(tableElement, gameMap) {
+function initMap(tableElement, gameMap) {
     for (let i = 0; i < NUM_ROW; i++) {
         const row = $('<tr></tr>');
         for (let j = 0; j < NUM_COLUMN; j++) {
@@ -51,23 +51,29 @@ function populateMap(tableElement, gameMap) {
     }
 }
 
+function updateMap(tableElement, gameMap) {
+    tableElement.find("td").each(function(idx) {
+        $(this).attr("id", `${COLOR_ARRAY[gameMap[Math.floor(idx / NUM_COLUMN)][idx%NUM_COLUMN]]}`);
+    });
+}
+
 
 
 $(document).ready(() => {
     // populate map
     const table = $('#game-map');
-    populateMap(table, gameMap);
+    initMap(table, gameMap);
 
     socket.on('updateMapAnswer', function (result) {
+        // result is a string of numbers without any delimiters
+        // Referred: https://stackoverflow.com/questions/6484670/how-do-i-split-a-string-into-an-array-of-characters
         console.log(result);
-        // const dataView = new DataView(result);
-        // for (let i = 0; i < NUM_ROW; i++) {
-        //     gameMap.push([]);
-        
-        //     for (let j = 0; j < NUM_COLUMN; j++) {
-        //         gameMap[i][j] = dataView.getUint8(index++);
-        //     }
-        // }
+     
+        // split string into 1d array and convert 1d array to 2d array
+        [...result].forEach(function (value, idx) {
+            gameMap[Math.floor(idx / NUM_COLUMN)][idx%NUM_COLUMN] = value;
+        });
+        updateMap(table, gameMap);
     })
 
     // show error

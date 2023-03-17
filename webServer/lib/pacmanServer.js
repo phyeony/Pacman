@@ -15,6 +15,9 @@ udpServer.on('error', (err) => {
 udpServer.on('message', (msg, rinfo) => {
     console.log(`udpServer got message from ${rinfo.address}:${rinfo.port}:\n${msg}`);
     const [commandName, arg, ...rest] = msg.toString().split(/\s+/);
+    console.log("commandName: ",commandName);
+    console.log("args: ",arg);
+    console.log("rest: ",rest);
     io.emit(commandName, arg);
 });
 
@@ -102,7 +105,7 @@ const handleCommand = (browserSocket) => {
         })
     }
     requestDataUpdate();
-    //setInterval(requestDataUpdate, 900);
+    setInterval(requestDataUpdate, 900);
 
 }
 
