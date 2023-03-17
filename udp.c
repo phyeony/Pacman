@@ -12,8 +12,11 @@
 #include <stdbool.h>
 #include "shutdown.h"
 #include <arpa/inet.h>
+#include "gameManager.h"
+#include "map.h"
 
 #define PORT 12345
+#define RECEIVER_PORT 3000
 #define MAX_LEN 28700
 #define INT_BASE 10
 #define TEMP_ITEM_LENGTH 350
@@ -73,31 +76,23 @@ static void *updateVolume(char *args)
     } else {
         // do smth
     }
-    snprintf(messageToReply, MAX_LEN, "updateVolumeAnswer %d", getVolume());
+    // snprintf(messageToReply, MAX_LEN, "updateVolumeAnswer %d", getVolume());
     return NULL;
 }
 
 // args = " "
 static void *updateData(char *args)
 {
-    double uptime, idle;
-    FILE *fp = fopen("/proc/uptime", "r");
-    if (fp == NULL) {
-        perror("Error opening file");
-    }
-    if (fscanf(fp, "%lf %lf", &uptime, &idle) != 2) {
-        perror("Error reading file");
-    }
-    fclose(fp);
-    sin_len = sizeof(sinRemote);
-    snprintf(messageToReply, MAX_LEN, "updateDeviceUpTimeAnswer %f", uptime);
-    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
-    snprintf(messageToReply, MAX_LEN, "updateDrumBeatModeAnswer %s", BeatGenerator_getCurrentBeatMode());
-    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
-    snprintf(messageToReply, MAX_LEN, "updateTempoAnswer %d", getTempo());
-    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
-    snprintf(messageToReply, MAX_LEN, "updateVolumeAnswer %d", getVolume());
-    // to be send by the code later. I know, this code is a mess.
+    char answerString = "updateMapAnswer ";
+    size_t answerStringLength = strlen(answerString);
+    int gameMap[ROW_SIZE][COLUMN_SIZE];
+    GameManager_getMap(gameMap);
+    // flattens 2d array to 1d array
+    uint8_t data[ROW_SIZE * COLUMN_SIZE * sizeof(uint8_t)];
+    memcpy(data, gameMap, sizeof(data));
+
+    memcpy(messageToReply, answerString, answerStringLength);
+    memcpy(messageToReply + answerStringLength, data, sizeof(data));
     return NULL;
 }
 
@@ -241,7 +236,7 @@ static void *startUdpProgram(void *args)
             close(socketDescriptor);
             exit(EXIT_FAILURE);
         }
-        sinRemote.sin_port = htons(PORT);
+        sinRemote.sin_port = htons(RECEIVER_PORT);
         // Null terminated (string)
         messageReceived[bytesRx] = 0;
 

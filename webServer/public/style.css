@@ -99,6 +99,7 @@ td {
 
 #black {
   background-color: black;
+  border: 2px solid white !important;
 }
 
 #white {

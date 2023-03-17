@@ -9,11 +9,42 @@ const MAX_BPM = 300;
 const NUM_ROW = 16;
 const NUM_COLUMN = 32;
 
-function populateMap(tableElement) {
+/* color mapping from C enum to Javascript
+    typedef enum 
+    {
+        BLACK=0,
+        RED,
+        GREEN,
+        YELLOW,
+        BLUE,
+        PINK,
+        LIGHT_BLUE,
+        WHITE,
+        END,  // This will display BLACK.
+    } Color;
+
+    Not the best way since if the C enum changes, this need to change as well.
+*/
+const COLOR_ARRAY = [
+    'black',
+    'red',
+    'green',
+    'yellow',
+    'blue',
+    'pink',
+    'light_blue',
+    'white'
+]
+
+// create a new 2D array with all values set to 0 which is black.
+let gameMap = new Array(NUM_ROW).fill(0).map(() => new Array(NUM_COLUMN).fill(0));
+
+
+function populateMap(tableElement, gameMap) {
     for (let i = 0; i < NUM_ROW; i++) {
         const row = $('<tr></tr>');
         for (let j = 0; j < NUM_COLUMN; j++) {
-            const cell = $('<td></td>');
+            const cell = $(`<td id=${COLOR_ARRAY[gameMap[i][j]]}></td>`);
             row.append(cell);
         }
         tableElement.append(row);
@@ -21,11 +52,23 @@ function populateMap(tableElement) {
 }
 
 
+
 $(document).ready(() => {
     // populate map
     const table = $('#game-map');
-    populateMap(table);
+    populateMap(table, gameMap);
 
+    socket.on('updateMapAnswer', function (result) {
+        console.log(result);
+        // const dataView = new DataView(result);
+        // for (let i = 0; i < NUM_ROW; i++) {
+        //     gameMap.push([]);
+        
+        //     for (let j = 0; j < NUM_COLUMN; j++) {
+        //         gameMap[i][j] = dataView.getUint8(index++);
+        //     }
+        // }
+    })
 
     // show error
     const showError = () => {
@@ -84,25 +127,6 @@ $(document).ready(() => {
         }
     })
 
-    // mode
-    $("#modeNone").click(function () {
-        socket.emit("updateDrumBeatMode", { newBeatMode: "NONE" });
-    })
-
-    $("#modeRock1").click(function () {
-        socket.emit("updateDrumBeatMode", { newBeatMode: "ROCK_1" });
-    })
-
-    $("#modeRock2").click(function () {
-        socket.emit("updateDrumBeatMode", { newBeatMode: "ROCK_2" });
-    })
-
-
-    socket.on('updateDrumBeatModeAnswer', function (result) {
-        // expected result is one of "none", "rock 1", "rock 2"
-        $("#modeid").text(result)
-    })
-
     // volume
     $("#volumeDown").click(function () {
         const currentVal = $("#volumeid").val();
@@ -124,42 +148,6 @@ $(document).ready(() => {
         $("#volumeid").val(result)
     })
 
-    // tempo
-    $("#tempoDown").click(function () {
-        const currentVal = $("#tempoid").val();
-        if (currentVal === MIN_BPM) {
-            return;
-        }
-        socket.emit("updateTempo", { increase: false });
-    })
-
-    $("#tempoUp").click(function () {
-        const currentVal = $("#tempoid").val();
-        if (currentVal === MAX_BPM) {
-            return;
-        }
-        socket.emit("updateTempo", { increase: true });
-    })
-
-    socket.on('updateTempoAnswer', function (result) {
-        $("#tempoid").val(result)
-    })
-
-    // drum sounds
-    $("#hiHatSound").click(function () {
-        socket.emit("playDrumSound", { newDrumSound: "HI-HAT" });
-    })
-    $("#snareSound").click(function () {
-        socket.emit("playDrumSound", { newDrumSound: "SNARE" });
-    })
-    $("#baseSound").click(function () {
-        socket.emit("playDrumSound", { newDrumSound: "BASE" });
-    })
-
-    socket.on('playDrumSoundAnswer', function (result) {
-        // display error if it didn't work.
-    })
-
     // terminate
     $("#stop").click(function () {
         socket.emit("terminate");
@@ -170,14 +158,6 @@ $(document).ready(() => {
         // diplay error if it didn't work
     })
 
-    // beatbox up time
 
-    socket.on('updateDeviceUpTimeAnswer', function (result) {
-        // diplay error if it didn't work
-        // result is a double value in seconds.
-        const hours = Math.floor(result / 3600);
-        const minutes = Math.floor((result % 3600) / 60);
-        const secondsRemainder = Math.floor(result % 60);
-        $('#uptime').text(`${hours}:${minutes}:${secondsRemainder}`)
-    })
+
 })

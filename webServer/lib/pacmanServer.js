@@ -1,6 +1,7 @@
 const socketio = require('socket.io');
 let io;
 const PORT =12345;
+const UDP_SERVER_PORT = 3000; 
 
 const dgram = require('dgram');
 
@@ -22,7 +23,7 @@ udpServer.on('listening', () => {
   console.log(`udpServer listening ${address.address}:${address.port}`);
 });
 
-udpServer.bind(PORT);
+udpServer.bind(UDP_SERVER_PORT);
 
 const udpClient = dgram.createSocket('udp4');
 const BBG_IP_ADDRESS = "192.168.7.2"
@@ -55,21 +56,6 @@ const handleCommand = (browserSocket) => {
         })
     })
 
-    browserSocket.on('updateTempo', (data) => {
-        const { increase } = data;
-        // call C module
-        const message = `updateTempo ${increase}`;
-        udpClient.send(message, PORT, BBG_IP_ADDRESS, (err) => {
-            if (err) {
-                console.error(`Error sending message: ${err}`);
-                // show error
-                browserSocket.emit("updateTempoAnswerError", err);
-            } else {
-                console.log(`Message sent to ${BBG_IP_ADDRESS}:${PORT}: ${message}`);
-                clearTimeout(errorTimer);
-            }
-        })
-    })
 
     browserSocket.on('updateVolume', (data) => {
         const { increase } = data;
@@ -86,36 +72,6 @@ const handleCommand = (browserSocket) => {
         })
     })
 
-    browserSocket.on('updateDrumBeatMode', (data) => {
-        const {newBeatMode} = data;
-        // call C module
-        const message = `updateDrumBeatMode ${newBeatMode}`;
-        udpClient.send(message, PORT, BBG_IP_ADDRESS, (err) => {
-            if (err) {
-                console.error(`Error sending message: ${err}`);
-                // show error
-            } else {
-                console.log(`Message sent to ${BBG_IP_ADDRESS}:${PORT}: ${message}`);
-                clearTimeout(errorTimer);
-            }
-        })
-    })
-
-    browserSocket.on('playDrumSound', (data) => {
-        const {newDrumSound} = data;
-        // call C module
-        const message = `playDrumSound ${newDrumSound}`;
-        console.log("SENDING ", message)
-        udpClient.send(message, PORT, BBG_IP_ADDRESS, (err) => {
-            if (err) {
-                console.error(`Error sending message: ${err}`);
-                // show error
-            } else {
-                console.log(`Message sent to ${BBG_IP_ADDRESS}:${PORT}: ${message}`);
-                clearTimeout(errorTimer);
-            }
-        })
-    })
 
     browserSocket.on('terminate', (data) => {
         // call C module 
@@ -131,6 +87,7 @@ const handleCommand = (browserSocket) => {
         })
     })
 
+    // update game map and current score
     const requestDataUpdate = () => {
         // call C module 
         const message = `updateData`;

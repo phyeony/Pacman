@@ -14,9 +14,9 @@ const server = http.createServer(function(request, response){
     serveStatic(response, absPath);
 })
 
-const beatBoxServer = require("./lib/beatBoxServer");
-// const udpSocket = require("./udpSocket");
-beatBoxServer.listen(server);
+const pacmanServer = require("./lib/pacmanServer");
+
+pacmanServer.listen(server);
 
 const serveStatic = (response, absPath) => {
     fs.access(absPath, fs.R_OK, function (err) {
