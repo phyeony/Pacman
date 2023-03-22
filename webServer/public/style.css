@@ -1,0 +1,111 @@
+body {
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h1,
+h2 {
+  margin-bottom: 1px;
+  padding-bottom: 1px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  width: 20px;
+  height: 20px;
+  border: 1px solid black;
+}
+
+.flexColumnContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  border: thin black solid;
+  padding: 10pt;
+  margin-top: 3pt;
+}
+
+#flexRowContainer {
+  display: flex;
+  flex-direction: row;
+  margin-top: 4pt;
+}
+
+.score-box {
+  background-color: #f3f3f3;
+}
+
+.right-box {
+  flex: 1;
+  margin-left: 8pt;
+}
+
+.left-box {
+  flex: 1;
+}
+
+#score {
+  font-size: 50px;
+}
+
+#error-box {
+  border: thin black solid;
+  clear: both;
+  background-color: red;
+  padding-left: 10pt;
+  padding-right: 10pt;
+  min-height: 100pt;
+  margin-top: 20px;
+  display: none;
+}
+
+.item-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.color-box {
+  width: 50px;
+  height: 50px;
+  border: 2px solid white;
+}
+
+#blue {
+  background-color: blue;
+}
+
+#red {
+  background-color: red;
+}
+
+#green {
+  background-color: green;
+}
+
+#pink {
+  background-color: pink;
+}
+
+#yellow {
+  background-color: yellow;
+}
+
+#black {
+  background-color: black;
+  border: 2px solid white !important;
+}
+
+#white {
+  background-color: white;
+}
+
+.description {
+  margin-left: 20px;
+}

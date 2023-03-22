@@ -3,6 +3,11 @@
         "gamemanager.h": "c",
         "type_traits": "c",
         "ghost.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "sstream": "c"
     }
 }
