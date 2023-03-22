@@ -190,7 +190,6 @@ static void replyToMessage(char *messageReceived)
     sin_len = sizeof(sinRemote); // not sure if this is needed. might've already been assigned in recvfrom.
     int bytesLeftInReply = 0;
     for(int i=0; i<MAX_LEN; i++) {
-        printf("%c ", messageToReply[i]);
         if(messageToReply[i]=='\0'){
             break;
         }
