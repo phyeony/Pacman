@@ -1,5 +1,5 @@
 TARGETS= main
-DEPS= ghost.c map.c gameManager.c ledDisplay.c utility.c joycon.c udp.c shutdown.c
+DEPS= ghost.c map.c gameManager.c ledDisplay.c utility.c joycon.c udp.c shutdown.c zenCapeJoystick.c types.h
 
 OUTFILE = game
 OUTDIR = $(HOME)/cmpt433/public/myApps

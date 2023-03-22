@@ -8,6 +8,8 @@
         "string_view": "c",
         "initializer_list": "c",
         "utility": "c",
-        "sstream": "c"
-    }
+        "sstream": "c",
+        "shutdown.h": "c",
+        "types.h": "c"
+}
 }
