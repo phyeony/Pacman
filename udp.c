@@ -98,13 +98,8 @@ static void *updateData(char *args)
 
     snprintf(messageToReply, MAX_LEN, "%s", answerString);
     for (int i = 0; i < ROW_SIZE * COLUMN_SIZE; i++) {
-        printf(" %d, ",data[i]);
         char digit = '0' + data[i]; // Convert integer to corresponding character
         strncat(messageToReply, &digit, 1); // Append character to message
-    }
-    printf("Size of data: %d \n", dataLength);
-    for (int i = 0; messageToReply[i] != '\0'; i++) {
-        printf("%c ", messageToReply[i]);
     }
     return NULL;
 }
