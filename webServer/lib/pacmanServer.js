@@ -105,7 +105,7 @@ const handleCommand = (browserSocket) => {
         })
     }
     requestDataUpdate();
-    setInterval(requestDataUpdate, 900);
+    setInterval(requestDataUpdate, 450);
 
 }
 
