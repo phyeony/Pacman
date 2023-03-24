@@ -3,6 +3,7 @@
 #include "map.h"
 #include "ledDisplay.h"
 #include "joycon.h"
+#include "zenCapeJoystick.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
@@ -116,6 +117,7 @@ void GameManager_init()
     // }
     // Ghost_registerCallback(ghosts, GHOST_NUM, &GameManager_moveGhost);
     Joycon_registerCallback(&GameManager_movePacman, &GameManager_cleanup);
+    ZenCapeJoystick_registerCallback(&GameManager_movePacman);
     LEDDisplay_registerCallback(&GameManager_getMap);
 
 }
