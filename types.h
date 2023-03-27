@@ -10,4 +10,9 @@ typedef enum
     IDLE_STATE
 } Direction;
 
+typedef struct {
+    int row;
+    int col;
+} Offset;
+
 #endif

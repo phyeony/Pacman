@@ -2,6 +2,7 @@
 #ifndef _GHOST_H_
 #define _GHOST_H_
 #include "map.h"
+#include "types.h"
 
 #define GHOST_NUM 4
 // longer delay = slower ghost
@@ -28,6 +29,7 @@ typedef struct Ghost
     long long modeStartTimeInMs;
     Location location;
     Tile currentTile;
+    Direction currentDirection;
 } Ghost;
 
 

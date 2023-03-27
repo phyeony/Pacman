@@ -80,7 +80,6 @@ static void *updateVolume(char *args)
 // args = " "
 static void *updateData(char *args)
 {
-    printf("UPDATE!\n");
     const char *answerString = "updateMapAnswer ";
     //size_t answerStringLength = strlen(answerString);
     Tile gameMap[ROW_SIZE][COLUMN_SIZE];

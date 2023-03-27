@@ -3,6 +3,8 @@
 #define _MAP_H_
 #define ROW_SIZE 16
 #define COLUMN_SIZE 32
+#define MAX_INTERSECTION_SIZE 150
+#define MAX_NUM_VALID_PATHWAYS 4
 typedef enum 
 {
     BLACK=0,
@@ -23,7 +25,8 @@ typedef enum
     DOT,
     POWER_DOT,
     GHOST,
-    EMPTY
+    EMPTY,
+    OUT_OF_BOUND
 } TileType;
 
 typedef enum

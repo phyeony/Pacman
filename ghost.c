@@ -5,15 +5,26 @@
 #include <stdlib.h>
 
 static Ghost ghosts[GHOST_NUM]={
-    {.name = "ghostA", .mode = PAUSED,},
-    {.name = "ghostB", .mode = PAUSED,},
-    {.name = "ghostC", .mode = PAUSED,},
-    {.name = "ghostD", .mode = PAUSED,},
+    {.name = "ghostA", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.name = "ghostB", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.name = "ghostC", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.name = "ghostD", .mode = PAUSED, .currentDirection = IDLE_STATE},
 };
+static int activeGhosts = 0;
 static int running = 1;
 static pthread_t id;
+
 void* startMovingGhosts();
 static GhostCallback movementCallback;
+
+// Ghost *getGhostAtLocation(int row, int col) {
+//     for (int i = 0; i < GHOST_NUM; i++) {
+//         if (ghosts[i].location.row == row && ghosts[i].location.col == col) {
+//             return &ghosts[i];
+//         }
+//     }
+//     return NULL;
+// }
 
 void Ghost_registerCallback(GhostCallback newCallback)
 {
@@ -23,12 +34,12 @@ void Ghost_registerCallback(GhostCallback newCallback)
 void* startMovingGhosts()
 {
     int headStart = 9;
-    int activeGhosts = 0;
+
     
     while (running) {
 
         // logic for chasing only, have to change when implement frightened
-        
+        Utility_sleepForMs(1000);
         for (int i = 0; i < activeGhosts; i++){
             (*movementCallback)(&ghosts[i]);
             Utility_sleepForMs(GHOST_SPEED_DELAY);
@@ -39,6 +50,11 @@ void* startMovingGhosts()
         if (headStart == 10){
             headStart = 0;
             ghosts[activeGhosts].mode = CHASE;
+            if(activeGhosts == 0) {
+                ghosts[activeGhosts].currentDirection = UP; // the first ghost should be able to move anywhere except down.
+            } else {
+                ghosts[activeGhosts].currentDirection = LEFT; // entrance is on the left.
+            }
             activeGhosts++;
         }
     }

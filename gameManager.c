@@ -9,20 +9,34 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <limits.h>
+#include <time.h>
+
+// Local headers
+static Location dijkstra(Location ghostLoc, Location pacmanLoc);
+static int isValidPathway(int row, int col);
+static int isOutOfBound(int row, int col);
+static int isIntersection(int row, int col);
+static Direction getNewDirectionFromLocations(Location currentLocation, Location newLoc);
+static Location chooseRandomValidPath(int row, int col);
+static Direction oppositeDirection(Direction dir);
+static TileType getCollidingTileType(int row, int col);
+
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
 static Location pacmanLocation;
-void ghostChase();
-int isValid(Location loc);
-Location dijkstra(Location ghostLoc, Location pacmanLoc);
 
 // populate these later as we populate game map
 static Location ghostHouseEntrance;
 static Location ghostHouse[GHOST_NUM-1];
+static Location intersections[MAX_INTERSECTION_SIZE];
+static int intersectionsCount = 0;
 
-
-// Init gameMap
-
+static Offset offsets[] = {
+    [UP] = { .row = -1, .col = 0 },
+    [DOWN] = { .row = 1, .col = 0 },
+    [LEFT] = { .row = 0, .col = -1 },
+    [RIGHT] = { .row = 0, .col = 1 },
+};
 
 static int foodCollected = 0;
 
@@ -33,6 +47,7 @@ void checkOutOfBounds(Location* loc);
 
 void GameManager_init()
 {
+    srand(time(NULL));   // Initialization, should only be called once.
     // Reset the screen
     memset(gameMap, 0, sizeof(gameMap));
     // pacman start position: mapBottomLeft[4][15]
@@ -88,6 +103,8 @@ void GameManager_init()
         }
     }
     int ghostCount = 0;
+    int pathways = 0;   
+    //Tile inter = { .tileType=EMPTY, WHITE}; just to test intersection
     for (int i = 0; i<ROW_SIZE;i++){
         for (int j = 0; j<COLUMN_SIZE;j++){
             if (gameMap[i][j].tileType==PACMAN){
@@ -99,11 +116,35 @@ void GameManager_init()
                     ghostHouseEntrance.row = i;
                     ghostHouseEntrance.col = j;
                     ghostCount++;
-                    continue;
+                } else {
+                    ghostHouse[ghostCount - 1].row = i;
+                    ghostHouse[ghostCount - 1].col = j;
+                    ghostCount++;
                 }
-                ghostHouse[ghostCount - 1].row = i;
-                ghostHouse[ghostCount - 1].col = j;
-                ghostCount++;
+            }
+            if(gameMap[i][j].tileType != WALL) {
+                // Extract intersection with more than 2 pathways
+                if(i+1 < ROW_SIZE && gameMap[i+1][j].tileType != WALL) {
+                    pathways++;
+                }
+                if(i-1 >= 0 && gameMap[i-1][j].tileType != WALL) {
+                    pathways++;
+                }
+                if(j-1 >=0 && gameMap[i][j-1].tileType != WALL) {
+                    pathways++;
+                }
+                if(j+1 < COLUMN_SIZE && gameMap[i][j+1].tileType != WALL) {
+                    pathways++;
+                }
+                if(pathways > 2) {
+                    // this is intersection
+                    intersections[intersectionsCount].row = i;
+                    intersections[intersectionsCount].col = j;
+                    intersectionsCount++;
+                 
+                    // gameMap[i][j] = inter; just to test intersection
+                }
+                pathways = 0;
             }
         }
     }
@@ -126,50 +167,151 @@ void GameManager_getMap(Tile temp[][COLUMN_SIZE])
     pthread_mutex_unlock(&mutex);
 }
 
-void GameManager_moveGhost(Ghost* currentGhost) 
-{
-    ghostChase(currentGhost);
 
-    // switch (currentGhost->mode)
-    // {
-    //     case CHASE:
-    //         break;
-    //     case FRIGHTENED:
-    //         // Algo. Check the timer.
-    //         break;
-    //     case PAUSED:
-    //         // move
-    //         break;
-    //     default:
-    //         break;
-    // }
+
+Direction directions[] = {UP, RIGHT, DOWN, LEFT};
+
+static Direction oppositeDirection(Direction dir) {
+    switch (dir) {
+        case UP:    return DOWN;
+        case RIGHT: return LEFT;
+        case DOWN:  return UP;
+        case LEFT:  return RIGHT;
+        default:    return IDLE_STATE;
+    }
 }
 
-void ghostChase(Ghost* currentGhost)
+
+void GameManager_moveGhost(Ghost* currentGhost) 
 {
-    Location ghostLocation = currentGhost->location;
-    Tile currentTile = currentGhost->currentTile;
-    printf("Current tile %d\n",currentGhost->currentTile.tileType);
-    // calculate new ghost location using Dijkstra's algorithm
-    Location newGhostLoc = dijkstra(ghostLocation, pacmanLocation);
-    // move ghost towards new location
+    // TODO: Currently, if 2 ghosts are coming towards from a different direction, they will collide and stay stuck forever.
+    //       Need to fix this.
+    int row = currentGhost->location.row;
+    int col = currentGhost->location.col;
+    Direction direction = currentGhost->currentDirection;
+    Direction newDirection = IDLE_STATE;
+    Tile newTile;
+    Location newLoc = {2,2}; // This location should not be used if everything is working as expected.
+
+    // Step 1: Get the new Ghost location
+    // * Move along the path if the ghost is not on interection with more than 3 valid
+    if(!isIntersection(row, col)) {
+        printf("Not intersection! :%s\n", currentGhost->name);
+        int surroundingGhosts = 0; 
+
+        // Check all possible directions
+        for (int i = 0; i < IDLE_STATE; i++) {
+            int newRow = row + offsets[i].row;
+            int newCol = col + offsets[i].col;
+            Direction tempNewDir = i;
+
+            if (isOutOfBound(newRow, newCol) || direction == oppositeDirection(tempNewDir)) {
+                continue;
+            }
+
+            TileType type = getCollidingTileType(newRow, newCol);
+
+            if (type == WALL) {
+                continue;
+            } else if (type == GHOST) {
+                if (tempNewDir == direction) {
+                    // Case 2: Another ghost is in front of it. The current ghost stays.
+                    return;
+                }
+                surroundingGhosts++;
+            } else {
+                // Case 1: Ghost goes to a new tile that is empty.
+                newLoc.row = newRow;
+                newLoc.col = newCol;
+                newDirection = tempNewDir;
+                break;
+            }
+        }
+
+        if (newDirection == IDLE_STATE) {
+            if (surroundingGhosts == 1) {
+                // Case 4: Ghost is surrounded by 3 walls and a ghost. The current ghost stays.
+                return;
+            } else {
+                // Case 3: All 3 paths are blocked by walls. Ghost goes back to the tile that is the opposite of its current direction.
+                newLoc.row = row + offsets[oppositeDirection(direction)].row;
+                newLoc.col = col + offsets[oppositeDirection(direction)].col;
+                newDirection = oppositeDirection(direction);
+            }
+        }
+        // if (newLoc.row == 2 && newLoc.col ==2 ) {
+        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+        // }
+    } else {
+        printf("Intersection! :%s\n", currentGhost->name);
+        // * On intersection, perform each mode's algorithm to get the new Ghost location
+        switch (currentGhost->mode)
+        {
+            case CHASE:
+                newLoc = dijkstra(currentGhost->location, pacmanLocation);
+                break;
+            case FRIGHTENED:
+                newLoc = chooseRandomValidPath(row, col);
+                break;
+            // case PAUSED:
+            //     // move
+            //     break;
+            default:
+                //printf("ON INTERSEC NO CHASE OR FRIGHTENED MODE??");
+                break;
+        }
+        // if (newLoc.row == 2 && newLoc.col ==2 ) {
+        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+        // }
+        newDirection = getNewDirectionFromLocations(currentGhost->location, newLoc);
+    }
+    // if (newLoc.row == 2 && newLoc.col ==2 ) {
+    //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+    // }   
+
+    // Step 2: Move ghost towards new location
     pthread_mutex_lock(&mutex);
     {
-        gameMap[ghostLocation.row][ghostLocation.col] = currentTile;
-        ghostLocation = newGhostLoc;
-        currentTile = gameMap[newGhostLoc.row][newGhostLoc.col];
-        gameMap[newGhostLoc.row][newGhostLoc.col] = ghost;
-        // printf("tileType:%d\n",gameMap[ghostLocation.row][ghostLocation.col].tileType);
+        gameMap[row][col] = currentGhost->currentTile;
+        newTile = gameMap[newLoc.row][newLoc.col];
+        gameMap[newLoc.row][newLoc.col] = ghost;
     }
     pthread_mutex_unlock(&mutex);
-    
-    // check for collision with pacman
-    if (ghostLocation.row == pacmanLocation.row && ghostLocation.col == pacmanLocation.col) {
-        printf("Game over! Ghost caught Pacman.\n");
-        GameManager_cleanup();
+    currentGhost->location = newLoc;
+    currentGhost->currentDirection = newDirection;
+    currentGhost->currentTile = newTile;
+
+    // Step 3: Check for collision with pacman
+    if (newLoc.row == pacmanLocation.row && newLoc.col == pacmanLocation.col) {
+        if(currentGhost->mode == FRIGHTENED) {
+            printf("Ghost is caught!");
+            // TODO: Go back to ghost house.
+        } else {
+            printf("Game over! Ghost caught Pacman.\n");
+            GameManager_cleanup();
+        }
     }
-    currentGhost->location = ghostLocation;
-    currentGhost->currentTile = currentTile;
+}
+
+static int isIntersection(int row, int col) {
+    for(int i = 0; i < intersectionsCount; i++) {
+        if(row == intersections[i].row && col == intersections[i].col) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static Direction getNewDirectionFromLocations(Location currentLocation, Location newLoc) {
+    if(newLoc.row - currentLocation.row == 1) {
+        return DOWN;
+    } else if (newLoc.row - currentLocation.row == -1) {
+        return UP;
+    } else if (newLoc.col - currentLocation.col == 1) {
+        return RIGHT;
+    } else {
+        return LEFT;
+    }
 }
 
 // moves Pacman in static game map. 
@@ -258,20 +400,52 @@ void checkOutOfBounds(Location* loc)
 
 
 
+static int isOutOfBound(int row, int col) {
+    return (row < 0 || row >= ROW_SIZE || col < 0 || col >= COLUMN_SIZE);
+}
 
-
-int isValid(Location loc) {
+static TileType getCollidingTileType(int row, int col) {
     // Check if location is within bounds of game map
-    if (loc.row < 0 || loc.row >= ROW_SIZE || loc.col < 0 || loc.col >= COLUMN_SIZE) {
+    if (isOutOfBound(row, col)) {
+        return OUT_OF_BOUND;
+    }
+    TileType temp;
+    pthread_mutex_lock(&mutex);
+    temp = gameMap[row][col].tileType;
+    pthread_mutex_unlock(&mutex);
+    return temp;
+}
+
+static int isValidPathway(int row, int col) {
+    if (isOutOfBound(row,col)) {
         return 0;
     }
-    if (gameMap[loc.row][loc.col].tileType == WALL || gameMap[loc.row][loc.col].tileType == GHOST) {
+    TileType type = getCollidingTileType(row, col);
+    if(type==WALL || type== GHOST){
         return 0;
     }
     return 1;
 }
 
-Location dijkstra(Location ghostLoc, Location pacmanLoc) {
+static Location chooseRandomValidPath(int row, int col) {
+    Location validPaths[MAX_NUM_VALID_PATHWAYS-1];
+    int pathwayCount = 0;
+    // collect valid pathways
+    for (int dir = 0; dir < IDLE_STATE; dir++) {
+        int newRow = row + offsets[dir].row;
+        int newCol = col + offsets[dir].col;
+
+        if (isValidPathway(newRow, newCol)) {
+            validPaths[pathwayCount] = (Location) {newRow, newCol};
+            pathwayCount++;
+        }
+    }
+    /* random int between 0 and pathwayCount-1*/
+    int randInt = rand() % pathwayCount;
+    return validPaths[randInt];
+}
+
+static Location dijkstra(Location ghostLoc, Location pacmanLoc) {
     int dist[ROW_SIZE][COLUMN_SIZE];
     int visited[ROW_SIZE][COLUMN_SIZE];
     Location prev[ROW_SIZE][COLUMN_SIZE];
@@ -306,27 +480,24 @@ Location dijkstra(Location ghostLoc, Location pacmanLoc) {
         // mark the vertex as visited
         visited[u.row][u.col] = 1;
 
+        // check if the visited vertex is Pacman's location
+        if (u.row == pacmanLoc.row && u.col == pacmanLoc.col) {
+            break;
+        }
+
         // update the distance of adjacent vertices
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                if (i == 0 && j == 0) {
-                    continue;
-                }
+        for (int dir = 0; dir < IDLE_STATE; dir++) {
+            int row = u.row + offsets[dir].row;
+            int col = u.col + offsets[dir].col;
 
-                int row = u.row + i;
-                int col = u.col + j;
-
-                if (row >= 0 && row < ROW_SIZE && col >= 0 && col < COLUMN_SIZE) {
-                    int altDist = dist[u.row][u.col] + 1;
-                    Location loc = {row,col};
-                    pthread_mutex_lock(&mutex);
-                    if (altDist < dist[row][col] && isValid(loc)) {
-                        dist[row][col] = altDist;
-                        prev[row][col] = u;
-                    }
-                    pthread_mutex_unlock(&mutex);
+            if (row >= 0 && row < ROW_SIZE && col >= 0 && col < COLUMN_SIZE) {
+                int altDist = dist[u.row][u.col] + 1;
+                if (altDist < dist[row][col] && isValidPathway(row, col)) {
+                    dist[row][col] = altDist;
+                    prev[row][col] = u;
                 }
             }
+        
         }
     }
 
