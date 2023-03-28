@@ -10,6 +10,7 @@
         "utility": "c",
         "sstream": "c",
         "shutdown.h": "c",
-        "types.h": "c"
-}
+        "types.h": "c",
+        "*.tcc": "c"
+    }
 }

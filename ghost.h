@@ -4,13 +4,15 @@
 #include "map.h"
 
 #define GHOST_NUM 4
+// longer delay = slower ghost
+#define GHOST_SPEED_DELAY 200
 #define FRIGHTENED_DURATION_MS 5000
 
-//Forward declare struct
+// Forward declare struct
 // https://stackoverflow.com/questions/30185561/c-function-pointer-callback-as-struct-member-with-self-reference-parameter
 typedef struct Ghost Ghost;
 
-typedef void (*GhostCallback)(Ghost *ghost);
+typedef void (*GhostCallback)(Ghost* ghost);
 typedef enum
 {
     CHASE=0,
@@ -24,13 +26,13 @@ typedef struct Ghost
     char *name;
     GhostMode mode;
     long long modeStartTimeInMs;
-    GhostCallback movementCallback;
     Location location;
+    Tile currentTile;
 } Ghost;
 
 
-void Ghost_init();
+void Ghost_init(Location ghostEntrance, Location otherGhosts[]);
 void Ghost_cleanup();
-// void Ghost_registerCallback(Ghost ghosts[], int size, GhostCallback callback);
-
+void Ghost_registerCallback(GhostCallback newCallback);
+void Ghost_getGhostList();
 #endif

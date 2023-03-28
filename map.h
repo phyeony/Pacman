@@ -45,6 +45,12 @@ typedef struct {
     int col;
 } Location;
 
+extern Tile empty;
+extern Tile pacman;
+extern Tile wall;
+extern Tile ghost;
+extern Tile dot;
+extern Tile powerDot;
 void Map_init();
 
 #endif
