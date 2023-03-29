@@ -10,6 +10,8 @@
         "utility": "c",
         "sstream": "c",
         "shutdown.h": "c",
-        "types.h": "c"
-}
+        "types.h": "c",
+        "audiomixer.h": "c",
+        "wave_player.h": "c"
+    }
 }

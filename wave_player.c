@@ -10,7 +10,7 @@
 // If cross-compiling, must have this file available, via this relative path,
 // on the target when the application is run. This example's Makefile copies the wave-files/
 // folder along with the executable to ensure both are present.
-#define SOURCE_FILE "audio_files/pacman_intermission.wav"
+#define SOURCE_FILE "audio_files/pacman_intermission_tempo.wav"
 //#define SOURCE_FILE "wave-files/100053__menegass__gui-drum-cc.wav"
 
 #define SAMPLE_RATE   44100
@@ -31,7 +31,7 @@ void Audio_playFile(snd_pcm_t *handle, wavedata_t *pWaveData);
 
 
 
-int main(void)
+void WavePlayer_init(void)
 {
 	printf("Beginning play-back of %s\n", SOURCE_FILE);
 
@@ -54,7 +54,6 @@ int main(void)
 	free(sampleFile.pData);
 
 	printf("Done!\n");
-	return 0;
 }
 
 

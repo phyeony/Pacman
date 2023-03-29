@@ -8,6 +8,8 @@
 #include "ghost.h"
 #include "udp.h"
 #include "shutdown.h"
+#include "audioMixer.h"
+// #include "wave_player.h"
 
 int main() {
     GameManager_init();
@@ -17,9 +19,14 @@ int main() {
     ZenCapeJoystick_init();
     Ghost_init();
     Udp_init();
+    AudioMixer_init();
+    gameStartSound();
+    // WavePlayer_init();
 
     Shutdown_waitUntilShutdown();
     
+    noSound();
+    AudioMixer_cleanup();
     Udp_cleanup();
     LedDisplay_cleanup();
     GameManager_cleanup();
