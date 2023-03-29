@@ -11,7 +11,11 @@
         "sstream": "c",
         "shutdown.h": "c",
         "types.h": "c",
+<<<<<<< HEAD
         "audiomixer.h": "c",
         "wave_player.h": "c"
+=======
+        "*.tcc": "c"
+>>>>>>> c13a951e4dc404930d155717b2fe2c092a13c4c8
     }
 }
