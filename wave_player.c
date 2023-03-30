@@ -28,12 +28,12 @@ typedef struct {
 	short *pData;
 } wavedata_t;
 
+static snd_pcm_t *handle;
+
 // Prototypes:
 snd_pcm_t *Audio_openDevice();
 void Audio_readWaveFileIntoMemory(char *fileName, wavedata_t *pWaveStruct);
-void Audio_playFile(snd_pcm_t *handle, wavedata_t *pWaveData);
-
-snd_pcm_t *handle;
+void Audio_playFile(wavedata_t *pWaveData);
 
 wavedata_t intermissionFile;
 wavedata_t chompFile;
@@ -60,45 +60,37 @@ void WavePlayer_init(void)
 
 void WavePlayer_playIntermission(void)
 {
-	Audio_playFile(handle, &intermissionFile);
+	Audio_playFile(&intermissionFile);
 }
 
 void WavePlayer_playChomp(void)
 {
-	Audio_playFile(handle, &chompFile);
+	Audio_playFile(&chompFile);
 }
 
 void WavePlayer_playDeath(void)
 {
-	Audio_playFile(handle, &deathFile);
+	Audio_playFile(&deathFile);
 }
 
 void WavePlayer_playEatGhost(void)
 {
-	Audio_playFile(handle, &eatGhostFile);
+	Audio_playFile(&eatGhostFile);
 }
 
 void WavePlayer_playEatFruit(void)
 {
-	Audio_playFile(handle, &eatFruitFile);
+	Audio_playFile(&eatFruitFile);
 }
 
 void WavePlayer_playExtraPac(void)
 {
-	Audio_playFile(handle, &extraPacFile);
+	Audio_playFile(&extraPacFile);
 }
 
 void WavePlayer_cleanup(void)
 {
 	printf("Cleanup Wave Player...\n");
-
-	// Free wave files we loaded
-	AudioMixer_freeWaveFileData(&intermissionFile);
-	AudioMixer_freeWaveFileData(&chompFile);
-	AudioMixer_freeWaveFileData(&deathFile);
-	AudioMixer_freeWaveFileData(&eatGhostFile);
-	AudioMixer_freeWaveFileData(&eatFruitFile);
-	AudioMixer_freeWaveFileData(&extraPacFile);
 
 	// Cleanup, letting the music in buffer play out (drain), then close and free.
 	snd_pcm_drain(handle);
@@ -119,8 +111,6 @@ void WavePlayer_cleanup(void)
 // Returns a handle to the PCM device; needed for other actions.
 snd_pcm_t *Audio_openDevice()
 {
-	snd_pcm_t *handle;
-
 	// Open the PCM output
 	int err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
 	if (err < 0) {
@@ -187,7 +177,7 @@ void Audio_readWaveFileIntoMemory(char *fileName, wavedata_t *pWaveStruct)
 }
 
 // Play the audio file (blocking)
-void Audio_playFile(snd_pcm_t *handle, wavedata_t *pWaveData)
+void Audio_playFile(wavedata_t *pWaveData)
 {
 	// If anything is waiting to be written to screen, can be delayed unless flushed.
 	fflush(stdout);

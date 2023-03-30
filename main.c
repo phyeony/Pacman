@@ -8,7 +8,6 @@
 #include "ghost.h"
 #include "udp.h"
 #include "shutdown.h"
-// #include "audioMixer.h"
 #include "wave_player.h"
 
 int main() {
@@ -18,16 +17,12 @@ int main() {
     Joycon_init();
     ZenCapeJoystick_init();
     Udp_init();
-    // AudioMixer_init();
-    // gameStartSound();
     WavePlayer_init();
     WavePlayer_playIntermission();
 
     Shutdown_waitUntilShutdown();
     
     WavePlayer_cleanup();
-    // noSound();
-    // AudioMixer_cleanup();
     Udp_cleanup();
     LedDisplay_cleanup();
     GameManager_cleanup();
