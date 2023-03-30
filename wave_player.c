@@ -10,8 +10,12 @@
 // If cross-compiling, must have this file available, via this relative path,
 // on the target when the application is run. This example's Makefile copies the wave-files/
 // folder along with the executable to ensure both are present.
-#define SOURCE_FILE "audio_files/pacman_extrapac_fixed.wav"
-//#define SOURCE_FILE "wave-files/100053__menegass__gui-drum-cc.wav"
+#define INTERMISSION_FILE "audio_files/pacman_intermission_fixed.wav"
+#define CHOMP_FILE "audio_files/pacman_chomp_fixed.wav"
+#define DEATH_FILE "audio_files/pacman_death_fixed.wav"
+#define EAT_GHOST_FILE "audio_files/pacman_eatghost_fixed.wav"
+#define EAT_FRUIT_FILE "audio_files/pacman_eatfruit_fixed.wav"
+#define EXTRAPAC_FILE "audio_files/pacman_extrapac_fixed.wav"
 
 #define SAMPLE_RATE   44100
 #define NUM_CHANNELS  1
@@ -29,34 +33,87 @@ snd_pcm_t *Audio_openDevice();
 void Audio_readWaveFileIntoMemory(char *fileName, wavedata_t *pWaveStruct);
 void Audio_playFile(snd_pcm_t *handle, wavedata_t *pWaveData);
 
+snd_pcm_t *handle;
 
+wavedata_t intermissionFile;
+wavedata_t chompFile;
+wavedata_t deathFile;
+wavedata_t eatGhostFile;
+wavedata_t eatFruitFile;
+wavedata_t extraPacFile;
 
 void WavePlayer_init(void)
 {
-	printf("Beginning play-back of %s\n", SOURCE_FILE);
+	printf("Init Wave Player...\n");
 
 	// Configure Output Device
-	snd_pcm_t *handle = Audio_openDevice();
+	handle = Audio_openDevice();
 
 	// Load wave file we want to play:
-	wavedata_t sampleFile;
-	Audio_readWaveFileIntoMemory(SOURCE_FILE, &sampleFile);
+	Audio_readWaveFileIntoMemory(INTERMISSION_FILE, &intermissionFile);
+	Audio_readWaveFileIntoMemory(CHOMP_FILE, &chompFile);
+	Audio_readWaveFileIntoMemory(DEATH_FILE, &deathFile);
+	Audio_readWaveFileIntoMemory(EAT_GHOST_FILE, &eatGhostFile);
+	Audio_readWaveFileIntoMemory(EAT_FRUIT_FILE, &eatFruitFile);
+	Audio_readWaveFileIntoMemory(EXTRAPAC_FILE, &extraPacFile);
+}
 
-	// Play Audio
-	Audio_playFile(handle, &sampleFile);
-//	Audio_playFile(handle, &sampleFile);
-//	Audio_playFile(handle, &sampleFile);
+void WavePlayer_playIntermission(void)
+{
+	Audio_playFile(handle, &intermissionFile);
+}
+
+void WavePlayer_playChomp(void)
+{
+	Audio_playFile(handle, &chompFile);
+}
+
+void WavePlayer_playDeath(void)
+{
+	Audio_playFile(handle, &deathFile);
+}
+
+void WavePlayer_playEatGhost(void)
+{
+	Audio_playFile(handle, &eatGhostFile);
+}
+
+void WavePlayer_playEatFruit(void)
+{
+	Audio_playFile(handle, &eatFruitFile);
+}
+
+void WavePlayer_playExtraPac(void)
+{
+	Audio_playFile(handle, &extraPacFile);
+}
+
+void WavePlayer_cleanup(void)
+{
+	printf("Cleanup Wave Player...\n");
+
+	// Free wave files we loaded
+	AudioMixer_freeWaveFileData(&intermissionFile);
+	AudioMixer_freeWaveFileData(&chompFile);
+	AudioMixer_freeWaveFileData(&deathFile);
+	AudioMixer_freeWaveFileData(&eatGhostFile);
+	AudioMixer_freeWaveFileData(&eatFruitFile);
+	AudioMixer_freeWaveFileData(&extraPacFile);
 
 	// Cleanup, letting the music in buffer play out (drain), then close and free.
 	snd_pcm_drain(handle);
 	snd_pcm_hw_free(handle);
 	snd_pcm_close(handle);
-	free(sampleFile.pData);
 
-	printf("Done!\n");
+	free(intermissionFile.pData);
+	free(chompFile.pData);
+	free(deathFile.pData);
+	free(eatGhostFile.pData);
+	free(eatFruitFile.pData);
+	free(extraPacFile.pData);
+
+	printf("Done stopping audio...\n");
 }
-
-
 
 // Open the PCM audio output device and configure it.
 // Returns a handle to the PCM device; needed for other actions.

@@ -21,9 +21,11 @@ int main() {
     // AudioMixer_init();
     // gameStartSound();
     WavePlayer_init();
+    WavePlayer_playIntermission();
 
     Shutdown_waitUntilShutdown();
     
+    WavePlayer_cleanup();
     // noSound();
     // AudioMixer_cleanup();
     Udp_cleanup();
