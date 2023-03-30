@@ -21,7 +21,7 @@ static int volume = DEFAULT_VOLUME;
 // If using stereo files then a frame would be two samples.
 
 // pacman audio clips
-#define STARTGAME_FILE "audio_files/pacman_chomp_fixed.wav"
+#define STARTGAME_FILE "audio_files/pacman_intermission_quality.wav"
 
 static wavedata_t startGame;
 
