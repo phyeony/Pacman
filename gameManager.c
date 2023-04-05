@@ -563,7 +563,7 @@ void GameManager_movePacman(Direction direction)
         WavePlayer_playEatFruit();
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount==0){
+        if (totalFoodCount<WIN_COND){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
@@ -588,9 +588,9 @@ void GameManager_movePacman(Direction direction)
     if (collision==DOT){
         totalFoodCount--;
         updateCurrentScore(100);
-        //WavePlayer_playChomp();
+        // WavePlayer_playChomp();
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount==0){
+        if (totalFoodCount<WIN_COND){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();

@@ -15,7 +15,7 @@ int main() {
     Utility_sleepForMs(100);
     LedDisplay_init();
     Joycon_init();
-    ZenCapeJoystick_init();
+    // ZenCapeJoystick_init();
     Udp_init();
     WavePlayer_init();
     WavePlayer_playIntermission();
@@ -26,7 +26,7 @@ int main() {
     Udp_cleanup();
     LedDisplay_cleanup();
     // GameManager_cleanup();
-    ZenCapeJoystick_cleanup();
+    // ZenCapeJoystick_cleanup();
     Joycon_cleanup();
 
     Shutdown_cleanup();

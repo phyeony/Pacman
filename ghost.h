@@ -6,7 +6,7 @@
 
 #define GHOST_NUM 4
 // longer delay = slower ghost
-#define GHOST_SPEED_DELAY 400
+#define GHOST_SPEED_DELAY 200
 #define FRIGHTENED_DURATION_MS 10000
 #define FRIGHTENED_GHOST_TRANSITION_DURATION_MS 3000
 
