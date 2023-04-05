@@ -546,7 +546,6 @@ void GameManager_movePacman(Direction direction)
         if (ghostP->mode == FRIGHTENED) {
             printf("Ghost is caught!\n");
             // TODO: Go back to ghost house.
-            WavePlayer_playEatGhost();
             updateCurrentScore(500);
             moveGhostBackToGhostHouse(ghostP);
         } else if (ghostP-> mode == CHASE) {
@@ -611,7 +610,7 @@ static void updateCurrentScore(int addition) {
 }
 
 static void moveGhostBackToGhostHouse(Ghost *ghostP) {
-   
+    WavePlayer_playEatGhost();
     Location newLoc;
     if(ghostP->id ==0) {
         newLoc = firstGhostLocation;
