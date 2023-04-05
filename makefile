@@ -14,5 +14,11 @@ all: $(TARGETS)
 
 $(TARGETS):
 	$(CC_C) $(CFLAGS) $@.c $(DEPS) -o $(OUTDIR)/$@ -lpthread -lusb-1.0 -lasound $(LFLAGS)
+	
+node:
+	mkdir -p $(PUBDIR)/pacman-server-copy/ 
+	cp -R webServer/* $(PUBDIR)/pacman-server-copy/ 
+	cd $(PUBDIR)/beatbox-server-copy/ && npm install
+
 clean:
 	rm $(OUTDIR)/$(OUTFILE)
