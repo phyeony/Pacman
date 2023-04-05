@@ -550,7 +550,7 @@ void GameManager_movePacman(Direction direction)
             GameManager_win();
         }
     }
-    
+
     return;
 }
 static void moveGhostBackToGhostHouse(Ghost *ghostP) {
@@ -571,6 +571,7 @@ int checkCollision(Location loc)
     pthread_mutex_unlock(&mutex);
     return tile.tileType;
 }
+
 void checkOutOfBounds(Location* loc)
 {
     if (loc->row == ROW_SIZE) {
