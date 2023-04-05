@@ -175,10 +175,10 @@ $(document).ready(() => {
 
     socket.on("gameOverAnswer", function (result) {
         console.log("RESULT:gameover ",result)
-        if(result){
-            $("#game-over-text").show();
-        } else {
+        if(result==0){
             $("#game-over-text").hide();
+        } else {
+            $("#game-over-text").show();
         }
         
     })
