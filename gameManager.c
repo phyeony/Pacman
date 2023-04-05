@@ -396,6 +396,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
     }
     if (newLoc.row == 2 && newLoc.col ==2 ) {
         printf("ERROR: Somewhere else%s\n", currentGhost->name);
+        return;
     }   
 
     // Step 2: Move ghost towards new location
