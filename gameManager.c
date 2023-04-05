@@ -21,6 +21,7 @@ static Location chooseRandomValidPath(int row, int col);
 static Direction oppositeDirection(Direction dir);
 static TileType getCollidingTileType(int row, int col);
 static void moveGhostBackToGhostHouse(Ghost *ghostP);
+static void updateCurrentScore(int addition);
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
