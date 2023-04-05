@@ -334,6 +334,7 @@ static void ledDisplay_refresh(void)
 static void *startDisplaying(void *args)
 {   
     while(1) {
+        // maybe put the ghost color change here...
         ledDisplay_refresh();
     }
     return NULL;

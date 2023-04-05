@@ -4,6 +4,7 @@
 #include "ledDisplay.h"
 #include "joycon.h"
 #include "zenCapeJoystick.h"
+#include "wave_player.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
@@ -20,13 +21,17 @@ static Direction getNewDirectionFromLocations(Location currentLocation, Location
 static Location chooseRandomValidPath(int row, int col);
 static Direction oppositeDirection(Direction dir);
 static TileType getCollidingTileType(int row, int col);
+static void moveGhostBackToGhostHouse(Ghost *ghostP);
+static void updateCurrentScore(int addition);
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t scoreMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t gameOverMutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
 static Location pacmanLocation;
 
 // populate these later as we populate game map
-static Location ghostHouseEntrance;
+static Location firstGhostLocation;
 static Location ghostHouse[GHOST_NUM-1];
 static Location intersections[MAX_INTERSECTION_SIZE];
 static int intersectionsCount = 0;
@@ -44,7 +49,6 @@ static int gameOver = 0;
 // Prototypes for helper functions
 int checkCollision(Location loc);
 void checkOutOfBounds(Location* loc);
-// static void GameManager_moveGhost(Ghost *);
 
 void GameManager_init(int first_init)
 {
@@ -54,13 +58,24 @@ void GameManager_init(int first_init)
     Joycon_registerCallback(&GameManager_movePacman);
     ZenCapeJoystick_registerCallback(&GameManager_movePacman);
     LEDDisplay_registerCallback(&GameManager_getMap);
-    
-    
+}
 
+int GameManager_isGameOver(){
+    int temp;
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        temp = gameOver;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
+    return temp;
 }
 
 void GameManager_initializeMap(){
-    gameOver = 0;
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 0;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
     totalFoodCount = 0;
     currentScore = 0;
     // Reset the screen
@@ -131,8 +146,8 @@ void GameManager_initializeMap(){
             }
             if (ghostCount < GHOST_NUM && gameMap[i][j].tileType==GHOST){
                 if (!ghostCount){
-                    ghostHouseEntrance.row = i;
-                    ghostHouseEntrance.col = j;
+                    firstGhostLocation.row = i;
+                    firstGhostLocation.col = j;
                     ghostCount++;
                 } else {
                     ghostHouse[ghostCount - 1].row = i;
@@ -167,12 +182,19 @@ void GameManager_initializeMap(){
         }
     }
     // Init Ghost
-    Ghost_init(ghostHouseEntrance,ghostHouse);
-    Ghost_registerCallback(&GameManager_moveGhost);
+    Ghost_init(firstGhostLocation, ghostHouse);
+    Ghost_registerCallback(&GameManager_moveGhost, &GameManager_changeAllGhostColor);
 }
 
 void GameManager_gameover()
 {
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 1;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
+    WavePlayer_playDeath();
+
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {empty, empty, ghost, ghost, ghost, ghost, empty, empty, empty, ghost, empty, empty, empty, ghost, ghost, ghost},
         {empty, ghost, empty, empty, empty, ghost, empty, empty, ghost, empty, ghost, empty, empty, ghost, empty, ghost},
@@ -277,6 +299,16 @@ void GameManager_win()
     }
 }
 
+void GameManager_getScores(int *currentScoreP, int *highScoreP)
+{
+    pthread_mutex_lock(&scoreMutex);
+    {
+        *currentScoreP = currentScore;
+        *highScoreP = highScore;
+    }
+    pthread_mutex_unlock(&scoreMutex);
+}
+
 void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
     pthread_mutex_lock(&mutex);
@@ -301,16 +333,23 @@ static Direction oppositeDirection(Direction dir) {
 }
 
 void printScore(){
-    gameOver = 1;
+    pthread_mutex_lock(&scoreMutex);
+    {
+        if (currentScore > highScore){
+            highScore = currentScore;
+            printf("New high score: %d\n",highScore);
+        }
+    }
+    pthread_mutex_unlock(&scoreMutex);
     if (currentScore > highScore){
         highScore = currentScore;
-        printf("New high score: %d\n",highScore);
     }
     else {
         printf("Your score: %d\nHigh score: %d\n",currentScore,highScore);
     }
     printf("Would you like to restart? Press Y to accept, otherwise press B to exit game\n");
 }
+
 void GameManager_moveGhost(Ghost* currentGhost) 
 {
     // TODO: Currently, if 2 ghosts are coming towards from a different direction, they will collide and stay stuck forever.
@@ -367,10 +406,11 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 newLoc.col = col + offsets[oppositeDirection(direction)].col;
                 newDirection = oppositeDirection(direction);
             }
+        } 
+        if (newLoc.row == 2 && newLoc.col ==2 ) {
+            printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+            return;
         }
-        // if (newLoc.row == 2 && newLoc.col ==2 ) {
-        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-        // }
     } else {
         // printf("Intersection! :%s\n", currentGhost->name);
         // * On intersection, perform each mode's algorithm to get the new Ghost location
@@ -387,16 +427,19 @@ void GameManager_moveGhost(Ghost* currentGhost)
             //     break;
             default:
                 //printf("ON INTERSEC NO CHASE OR FRIGHTENED MODE??");
+                return;
                 break;
         }
-        // if (newLoc.row == 2 && newLoc.col ==2 ) {
-        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-        // }
+        if (newLoc.row == 2 && newLoc.col ==2 ) {
+            printf("ERROR: IN INTERSEcTION%s\n", currentGhost->name);
+            return;
+        }
         newDirection = getNewDirectionFromLocations(currentGhost->location, newLoc);
     }
-    // if (newLoc.row == 2 && newLoc.col ==2 ) {
-    //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-    // }   
+    if (newLoc.row == 2 && newLoc.col ==2 ) {
+        printf("ERROR: Somewhere else%s\n", currentGhost->name);
+        return;
+    }   
 
     // Step 2: Move ghost towards new location
     pthread_mutex_lock(&mutex);
@@ -404,16 +447,18 @@ void GameManager_moveGhost(Ghost* currentGhost)
         gameMap[row][col] = currentGhost->currentTile;
         newTile = gameMap[newLoc.row][newLoc.col];
         gameMap[newLoc.row][newLoc.col] = ghost;
+        currentGhost->location = newLoc;
+        currentGhost->currentDirection = newDirection;
+        currentGhost->currentTile = newTile;
     }
     pthread_mutex_unlock(&mutex);
-    currentGhost->location = newLoc;
-    currentGhost->currentDirection = newDirection;
-    currentGhost->currentTile = newTile;
+ 
 
     // Step 3: Check for collision with pacman
     if (newLoc.row == pacmanLocation.row && newLoc.col == pacmanLocation.col) {
         if(currentGhost->mode == FRIGHTENED) {
-            printf("Ghost is caught!");
+            printf("Ghost is caught!\n");
+            moveGhostBackToGhostHouse(currentGhost);
             // TODO: Go back to ghost house.
         } else {
             printf("Game over! Ghost caught Pacman.\n");
@@ -443,6 +488,11 @@ static Direction getNewDirectionFromLocations(Location currentLocation, Location
     } else {
         return LEFT;
     }
+}
+
+void GameManager_changeAllGhostColor(Color newColor)
+{
+    ghost.color=newColor;
 }
 
 // moves Pacman in static game map. 
@@ -487,25 +537,45 @@ void GameManager_movePacman(Direction direction)
         return;
     }
     if (collision == GHOST){
-        printf("Ghost caught pacman, game over!\n");
-        printScore();
-        Ghost_cleanup();
-        GameManager_gameover();
+        // Do different thing depending on the ghost mode.
+        Ghost *ghostP = Ghost_getGhostAtLocation(newLoc);
+        if(ghostP==NULL) {
+            printf("ERROR: SHOULD NOT HAPPEN\n");
+            return;
+        }
+        if (ghostP->mode == FRIGHTENED) {
+            printf("Ghost is caught!\n");
+            // TODO: Go back to ghost house.
+            updateCurrentScore(500);
+            moveGhostBackToGhostHouse(ghostP);
+        } else if (ghostP-> mode == CHASE) {
+            printf("Game over! Ghost caught Pacman.\n");
+            printScore();
+            Ghost_cleanup();
+            GameManager_gameover();
+            //GameManager_cleanup();
+        }
         return;
     }
     if (collision == POWER_DOT){
-        printf("POWER - special atm cannot move into it yet.\n");
-        currentScore+=150;
+        printf("POWER - special.\n");
+        updateCurrentScore(150);
+        WavePlayer_playEatFruit();
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount<200){
+        if (totalFoodCount==0){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
             GameManager_win();
+        } else {
+            Ghost_changeAllGhostMode(FRIGHTENED);
+            ghost.color=WHITE;
         }
     }
-    if (collision==DOT||collision==EMPTY){
+
+        
+    if (collision==DOT||collision==EMPTY||collision==POWER_DOT){
         pthread_mutex_lock(&mutex);
         {
             gameMap[pacmanLocation.row][pacmanLocation.col] = empty;
@@ -517,17 +587,56 @@ void GameManager_movePacman(Direction direction)
     }
     if (collision==DOT){
         totalFoodCount--;
-        currentScore+=100;
+        updateCurrentScore(100);
+        //WavePlayer_playChomp();
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount<200){
+        if (totalFoodCount==0){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
             GameManager_win();
         }
     }
+
     return;
 }
+
+static void updateCurrentScore(int addition) {
+    pthread_mutex_lock(&scoreMutex);
+    {
+        currentScore += addition;
+    }
+    pthread_mutex_unlock(&scoreMutex);
+}
+
+static void moveGhostBackToGhostHouse(Ghost *ghostP) {
+    WavePlayer_playEatGhost();
+    Location newLoc;
+    if(ghostP->id ==0) {
+        newLoc = firstGhostLocation;
+    } else {
+        newLoc = ghostHouse[(ghostP->id)-1];
+    }
+    pthread_mutex_lock(&mutex);
+    {
+        // what if the ghost was on dot ?
+        gameMap[ghostP->location.row][ghostP->location.col] = ghostP->currentTile;
+        gameMap[newLoc.row][newLoc.col] = ghost;
+
+        // might be able to get away without mutex.
+        ghostP->location = newLoc;
+        ghostP->mode = FRIGHTENED;
+        if(ghostP->id == 0) {
+            ghostP->currentDirection = IDLE_STATE;
+        } else {
+            ghostP->currentDirection = LEFT;
+        }
+        ghostP->currentTile = empty;
+        //Ghost_decreaseActiveGhostCount();
+    }
+    pthread_mutex_unlock(&mutex);
+}
+
 int checkCollision(Location loc)
 {
     Tile tile;
@@ -536,21 +645,9 @@ int checkCollision(Location loc)
         tile = gameMap[loc.row][loc.col];
     }
     pthread_mutex_unlock(&mutex);
-
-    if (tile.tileType == WALL){
-        return WALL;
-    }
-    if (tile.tileType == DOT){
-        return DOT;
-    }
-    if (tile.tileType == GHOST){
-        return GHOST;
-    }
-    if (tile.tileType == POWER_DOT){
-        return POWER_DOT;
-    }
-    return EMPTY;
+    return tile.tileType;
 }
+
 void checkOutOfBounds(Location* loc)
 {
     if (loc->row == ROW_SIZE) {

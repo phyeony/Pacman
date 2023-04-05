@@ -13,6 +13,7 @@
         "types.h": "c",
         "audiomixer.h": "c",
         "wave_player.h": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "utility.h": "c"
     }
 }

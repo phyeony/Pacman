@@ -78,7 +78,7 @@ static void *startReadingInputs(void *args) {
             if(currentTime - lastActionTime >= currentJoystick.debounceTimeInMs) {
                 currentJoystick.action();
                 lastActionTime = currentTime;
-                printf("Action: %s \n", currentJoystick.directionName);
+                //printf("Action: %s \n", currentJoystick.directionName);
             } 
             //else {
                 //printf("Debounced action: %s \n", currentJoystick.directionName);
