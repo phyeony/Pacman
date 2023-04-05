@@ -248,6 +248,11 @@ void GameManager_gameover()
 
 void GameManager_win()
 {
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 1;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
         {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
@@ -597,7 +602,6 @@ void GameManager_movePacman(Direction direction)
             GameManager_win();
         }
     }
-
     return;
 }
 
