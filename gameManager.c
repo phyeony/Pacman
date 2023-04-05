@@ -170,7 +170,6 @@ void GameManager_initializeMap(){
     Ghost_init(ghostHouseEntrance,ghostHouse);
     Ghost_registerCallback(&GameManager_moveGhost);
 }
-<<<<<<< HEAD
 
 void GameManager_gameover()
 {
@@ -225,8 +224,59 @@ void GameManager_gameover()
     }
 }
 
-=======
->>>>>>> 12f8077849471991c8e8dac65df7c267ba520ec9
+void GameManager_win()
+{
+    Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, ghost, empty, empty, empty, empty, empty, ghost, empty, empty, ghost, ghost, ghost},
+        {empty, empty, empty, empty, ghost, empty, empty, empty, empty, empty, ghost, empty, empty, empty, empty, ghost},
+        {empty, empty, empty, empty, ghost, empty, empty, empty, empty, empty, ghost, empty, empty, empty, empty, ghost},
+        {empty, empty, empty, empty, ghost, empty, empty, ghost, empty, empty, ghost, empty, empty, empty, empty, ghost}};
+
+    Tile mapTopRight[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {ghost, ghost, empty, empty, ghost, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, ghost, ghost, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, ghost, empty, ghost, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, ghost, empty, empty, ghost, empty, empty, empty, empty, empty, empty, empty, empty}};
+
+    Tile mapBottomLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
+        {empty, empty, empty, empty, ghost, empty, empty, ghost, empty, empty, ghost, empty, empty, empty, empty, ghost},
+        {empty, empty, empty, empty, ghost, empty, empty, ghost, empty, empty, ghost, empty, empty, empty, empty, ghost},
+        {empty, empty, empty, empty, empty, ghost, ghost, empty, ghost, ghost, empty, empty, empty, ghost, ghost, ghost},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty}};
+
+    Tile mapBottomRight[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
+        {empty, empty, empty, empty, ghost, empty, empty, empty, ghost, empty, ghost, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, ghost, empty, empty, empty, empty, ghost, ghost, empty, empty, empty, empty, empty},
+        {ghost, ghost, empty, empty, ghost, empty, empty, empty, empty, empty, ghost, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
+        {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty}};
+
+    // Merge gameMap parts
+    for(int i = 0;i<ROW_SIZE/2;i++){
+        for(int j=0;j<COLUMN_SIZE/2;j++){
+            gameMap[i][j]=mapTopLeft[i][j];
+            gameMap[i][j+COLUMN_SIZE/2]=mapTopRight[i][j];
+            gameMap[i+ROW_SIZE/2][j]=mapBottomLeft[i][j];
+            gameMap[i+ROW_SIZE/2][j+COLUMN_SIZE/2]=mapBottomRight[i][j];
+        }
+    }
+}
+
 void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
     pthread_mutex_lock(&mutex);
