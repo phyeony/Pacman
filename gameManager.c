@@ -412,7 +412,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
     if (newLoc.row == pacmanLocation.row && newLoc.col == pacmanLocation.col) {
         if(currentGhost->mode == FRIGHTENED) {
             printf("Ghost is caught!");
-            moveGhostBackToGhostHouse(currentGhost);
+            //moveGhostBackToGhostHouse(currentGhost);
             // TODO: Go back to ghost house.
         } else {
             printf("Game over! Ghost caught Pacman.\n");
