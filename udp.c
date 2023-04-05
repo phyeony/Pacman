@@ -85,11 +85,16 @@ static void *updateData(char *args)
     Tile gameMap[ROW_SIZE][COLUMN_SIZE];
     int currentScore = 0;
     int highScore = 0;
-    GameManager_getData(gameMap, &currentScore, &highScore);
+    GameManager_getMap(gameMap);
+    GameManager_getScores(&currentScore, &highScore);
+    int isGameOver = GameManager_isGameOver();
     sin_len = sizeof(sinRemote);
-    snprintf(messageToReply, MAX_LEN, "updateScoreAnswer %d %d", currentScore, highScore);
+    snprintf(messageToReply, MAX_LEN, "gameOverAnswer %d", isGameOver);
     sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
-
+    snprintf(messageToReply, MAX_LEN, "updateCurrentScoreAnswer %d", currentScore);
+    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
+    snprintf(messageToReply, MAX_LEN, "updateHighScoreAnswer %d", highScore);
+    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
     size_t dataLength = ROW_SIZE * COLUMN_SIZE * sizeof(int);
     int data[dataLength];
     // Loop through the original array and extract the enum values and flatten an array

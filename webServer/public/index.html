@@ -22,6 +22,7 @@
 			<div class="container" id="upper">
 				<div id="modediv">
 					<table id="game-map"></table>
+					<div id="game-over-text">"Would you like to restart? Press Y to accept, otherwise press B to exit game"</div>
 					<h3>Volume</h3>
 					<p>
 						<input type="button" id="volumeDown" value=" - ">
@@ -77,7 +78,7 @@
 						<div class="color-box" id="yellow"></div>
 						<div class="description">
 							<h2>Power Dot</h2>
-							<p>Eat them to and you can eat Ghosts!</p>
+							<p>Eat them and you can eat Ghosts!</p>
 						</div>
 					</div>
 					<div class="item-container">
@@ -87,21 +88,21 @@
 							<p></p>
 						</div>
 					</div>
-					<!-- <div class="item-container">
-					<div class="color-box" id="white"></div>
-					<div class="description">
-						<h2>Heading</h2>
-						<p>Text goes here</p>
+					<div class="item-container">
+						<div class="color-box" id="white"></div>
+						<div class="description">
+							<h2>Ghost Frightened</h2>
+							<p>You can eat ghosts now for few seconds!</p>
+						</div>
 					</div>
-				</div> -->
 				</div>
 
 				<div class="right-box flexColumnContainer">
 					<div class="container score-box">
 						<h2>Current Score</h2>
-						<text id="score">0</text>
+						<text id="currentScore">0</text>
 						<h2>High Score</h2>
-						<text id="score">3000</text>
+						<text id="highScore">0</text>
 					</div>
 
 					<div id="error-box">

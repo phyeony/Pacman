@@ -24,6 +24,8 @@ static void moveGhostBackToGhostHouse(Ghost *ghostP);
 static void updateCurrentScore(int addition);
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t scoreMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t gameOverMutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
 static Location pacmanLocation;
 
@@ -54,11 +56,25 @@ void GameManager_init(int first_init)
     printf("foodcount %d\n",totalFoodCount);
     Joycon_registerCallback(&GameManager_movePacman);
     ZenCapeJoystick_registerCallback(&GameManager_movePacman);
-    LEDDisplay_registerCallback(&GameManager_getData);
+    LEDDisplay_registerCallback(&GameManager_getMap);
+}
+
+int GameManager_isGameOver(){
+    int temp;
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        temp = gameOver;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
+    return temp;
 }
 
 void GameManager_initializeMap(){
-    gameOver = 0;
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 0;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
     totalFoodCount = 0;
     currentScore = 0;
     // Reset the screen
@@ -171,6 +187,12 @@ void GameManager_initializeMap(){
 
 void GameManager_gameover()
 {
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 1;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
+
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {empty, empty, ghost, ghost, ghost, ghost, empty, empty, empty, ghost, empty, empty, empty, ghost, ghost, ghost},
         {empty, ghost, empty, empty, empty, ghost, empty, empty, ghost, empty, ghost, empty, empty, ghost, empty, ghost},
@@ -275,13 +297,21 @@ void GameManager_win()
     }
 }
 
-void GameManager_getData(Tile temp[][COLUMN_SIZE], int *currentScoreP, int *highScoreP)
+void GameManager_getScores(int *currentScoreP, int *highScoreP)
+{
+    pthread_mutex_lock(&scoreMutex);
+    {
+        *currentScoreP = currentScore;
+        *highScoreP = highScore;
+    }
+    pthread_mutex_unlock(&scoreMutex);
+}
+
+void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
     pthread_mutex_lock(&mutex);
     {
         memcpy(temp, gameMap, ROW_SIZE * COLUMN_SIZE * sizeof(gameMap[0][0]));
-        *currentScoreP = currentScore;
-        *highScoreP = highScore;
     }
     pthread_mutex_unlock(&mutex);
 }
@@ -301,15 +331,14 @@ static Direction oppositeDirection(Direction dir) {
 }
 
 void printScore(){
-    gameOver = 1;
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&scoreMutex);
     {
         if (currentScore > highScore){
             highScore = currentScore;
             printf("New high score: %d\n",highScore);
         }
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&scoreMutex);
     if (currentScore > highScore){
         highScore = currentScore;
     }
@@ -569,11 +598,11 @@ void GameManager_movePacman(Direction direction)
 }
 
 static void updateCurrentScore(int addition) {
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&scoreMutex);
     {
         currentScore += addition;
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&scoreMutex);
 }
 
 static void moveGhostBackToGhostHouse(Ghost *ghostP) {

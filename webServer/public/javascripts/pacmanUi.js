@@ -76,8 +76,13 @@ $(document).ready(() => {
         updateMap(table, gameMap);
     })
 
-    socket.on('updateScoreAnswer', function (result) {
-        console.log("RESULT: ", result);
+    socket.on('updateCurrentScoreAnswer', function (result) {
+        console.log("current RESULT: ", result);
+        $("#currentScore").text(result);
+    });
+    socket.on('updateHighScoreAnswer', function (result) {
+        console.log("high RESULT: ", result);
+        $("#highScore").text(result);
     });
     
     // show error
@@ -168,6 +173,14 @@ $(document).ready(() => {
         // diplay error if it didn't work
     })
 
+    socket.on("gameOverAnswer", function (result) {
+        if(result){
+            $("#game-over-text").show();
+        } else {
+            $("#game-over-text").hide();
+        }
+        
+    })
 
 
 })
