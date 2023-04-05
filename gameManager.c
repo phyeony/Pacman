@@ -192,6 +192,7 @@ void GameManager_gameover()
         gameOver = 1;
     }
     pthread_mutex_unlock(&gameOverMutex);
+    WavePlayer_playDeath();
 
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {empty, empty, ghost, ghost, ghost, ghost, empty, empty, empty, ghost, empty, empty, empty, ghost, ghost, ghost},
@@ -544,6 +545,7 @@ void GameManager_movePacman(Direction direction)
         if (ghostP->mode == FRIGHTENED) {
             printf("Ghost is caught!\n");
             // TODO: Go back to ghost house.
+            WavePlayer_playEatGhost();
             updateCurrentScore(500);
             moveGhostBackToGhostHouse(ghostP);
         } else if (ghostP-> mode == CHASE) {
@@ -558,7 +560,7 @@ void GameManager_movePacman(Direction direction)
     if (collision == POWER_DOT){
         printf("POWER - special.\n");
         updateCurrentScore(150);
-
+        WavePlayer_playEatFruit();
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
         if (totalFoodCount==0){
@@ -586,6 +588,7 @@ void GameManager_movePacman(Direction direction)
     if (collision==DOT){
         totalFoodCount--;
         updateCurrentScore(100);
+        WavePlayer_playChomp();
         // for testing - just eat 11 dots to win, full implementation win when total = 0
         if (totalFoodCount==0){
             printf("\n\nYou won!!\n");
