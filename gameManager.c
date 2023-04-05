@@ -401,11 +401,12 @@ void GameManager_moveGhost(Ghost* currentGhost)
         gameMap[row][col] = currentGhost->currentTile;
         newTile = gameMap[newLoc.row][newLoc.col];
         gameMap[newLoc.row][newLoc.col] = ghost;
+        currentGhost->location = newLoc;
+        currentGhost->currentDirection = newDirection;
+        currentGhost->currentTile = newTile;
     }
     pthread_mutex_unlock(&mutex);
-    currentGhost->location = newLoc;
-    currentGhost->currentDirection = newDirection;
-    currentGhost->currentTile = newTile;
+ 
 
     // Step 3: Check for collision with pacman
     if (newLoc.row == pacmanLocation.row && newLoc.col == pacmanLocation.col) {
@@ -550,8 +551,7 @@ void GameManager_movePacman(Direction direction)
     return;
 }
 static void moveGhostBackToGhostHouse(Ghost *ghostP) {
-    int currentGhostRow = ghostP->location.row;
-    int currentGhostCol = ghostP->location.col;
+   
     Location newLoc;
     if(ghostP->id ==0) {
         newLoc = firstGhostLocation;
@@ -561,15 +561,15 @@ static void moveGhostBackToGhostHouse(Ghost *ghostP) {
     pthread_mutex_lock(&mutex);
     {
         // what if the ghost was on dot ?
-        gameMap[currentGhostRow][currentGhostCol] = ghostP->currentTile;
+        gameMap[ghostP->location.row][ghostP->location.col] = ghostP->currentTile;
         gameMap[newLoc.row][newLoc.col] = ghost;
+        ghostP->location = newLoc;
+        ghostP->mode = PAUSED;
+        ghostP->currentDirection = IDLE_STATE;
+        ghostP->currentTile = empty;
+        Ghost_decreaseActiveGhostCount();
     }
     pthread_mutex_unlock(&mutex);
-    ghostP->location = newLoc;
-    ghostP->mode = PAUSED;
-    ghostP->currentDirection = IDLE_STATE;
-    ghostP->currentTile = empty;
-    Ghost_decreaseActiveGhostCount();
 }
 
 int checkCollision(Location loc)
