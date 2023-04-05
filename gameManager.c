@@ -568,8 +568,12 @@ static void moveGhostBackToGhostHouse(Ghost *ghostP) {
         gameMap[ghostP->location.row][ghostP->location.col] = ghostP->currentTile;
         gameMap[newLoc.row][newLoc.col] = ghost;
         ghostP->location = newLoc;
-        ghostP->mode = CHASE;
-        ghostP->currentDirection = IDLE_STATE;
+        ghostP->mode = FRIGHTENED;
+        if(ghostP->id == 0) {
+            ghostP->currentDirection = IDLE_STATE;
+        } else {
+            ghostP->currentDirection = LEFT;
+        }
         ghostP->currentTile = empty;
         //Ghost_decreaseActiveGhostCount();
     }
