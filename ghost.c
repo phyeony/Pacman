@@ -7,10 +7,10 @@
 #include <stdlib.h>
 
 static Ghost ghosts[GHOST_NUM]={
-    {.name = "ghostA", .mode = PAUSED, .currentDirection = IDLE_STATE},
-    {.name = "ghostB", .mode = PAUSED, .currentDirection = IDLE_STATE},
-    {.name = "ghostC", .mode = PAUSED, .currentDirection = IDLE_STATE},
-    {.name = "ghostD", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.id = 0, .name = "ghostA", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.id = 1, .name = "ghostB", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.id = 2, .name = "ghostC", .mode = PAUSED, .currentDirection = IDLE_STATE},
+    {.id = 3, .name = "ghostD", .mode = PAUSED, .currentDirection = IDLE_STATE},
 };
 static int activeGhosts = 0;
 static int running = 1;
@@ -64,8 +64,11 @@ void* startMovingGhosts()
             }
             if(ghosts[i].mode == FRIGHTENED &&  Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS - FRIGHTENED_GHOST_TRANSITION_DURATION_MS) {
                 (*changeGhostColorCallback)(WHITE);
+                // Utility_sleepForMs(100);
                 (*changeGhostColorCallback)(RED);
+                // Utility_sleepForMs(100);
                 (*changeGhostColorCallback)(WHITE);
+                // Utility_sleepForMs(100);
                 // TODO: NOT SURE IF THIS WILL WORK.
             }  
             if(ghosts[i].mode == FRIGHTENED && Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS) {
@@ -82,8 +85,8 @@ void* startMovingGhosts()
         if (headStart == 10){
             headStart = 0;
             ghosts[activeGhosts].mode = CHASE;
-            if(activeGhosts == 0) {
-                ghosts[activeGhosts].currentDirection = UP; // the first ghost should be able to move anywhere except down.
+            if(ghosts[activeGhosts].id == 0) {
+                ghosts[activeGhosts].currentDirection = IDLE_STATE; // the first ghost should be able to move anywhere except down.
             } else {
                 ghosts[activeGhosts].currentDirection = LEFT; // entrance is on the left.
             }
