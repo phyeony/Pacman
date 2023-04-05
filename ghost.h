@@ -5,7 +5,7 @@
 
 #define GHOST_NUM 4
 // longer delay = slower ghost
-#define GHOST_SPEED_DELAY 200
+#define GHOST_SPEED_DELAY 400
 #define FRIGHTENED_DURATION_MS 5000
 
 // Forward declare struct
