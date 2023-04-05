@@ -55,9 +55,6 @@ void GameManager_init(int first_init)
     Joycon_registerCallback(&GameManager_movePacman);
     ZenCapeJoystick_registerCallback(&GameManager_movePacman);
     LEDDisplay_registerCallback(&GameManager_getMap);
-    
-    
-
 }
 
 void GameManager_initializeMap(){
