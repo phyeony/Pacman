@@ -20,6 +20,7 @@ static Direction getNewDirectionFromLocations(Location currentLocation, Location
 static Location chooseRandomValidPath(int row, int col);
 static Direction oppositeDirection(Direction dir);
 static TileType getCollidingTileType(int row, int col);
+static void moveGhostBackToGhostHouse(Ghost *ghostP);
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Tile gameMap[ROW_SIZE][COLUMN_SIZE];
@@ -168,7 +169,7 @@ void GameManager_initializeMap(){
     }
     // Init Ghost
     Ghost_init(ghostHouseEntrance,ghostHouse);
-    Ghost_registerCallback(&GameManager_moveGhost);
+    Ghost_registerCallback(&GameManager_moveGhost, &GameManager_changeAllGhostColor);
 }
 
 void GameManager_gameover()
@@ -445,6 +446,11 @@ static Direction getNewDirectionFromLocations(Location currentLocation, Location
     }
 }
 
+void GameManager_changeAllGhostColor(Color color)
+{
+    ghost.color=color;
+}
+
 // moves Pacman in static game map. 
 void GameManager_movePacman(Direction direction)
 {
@@ -488,13 +494,26 @@ void GameManager_movePacman(Direction direction)
     }
     if (collision == GHOST){
         printf("Ghost caught pacman, game over!\n");
-        printScore();
-        Ghost_cleanup();
-        GameManager_gameover();
+        // Do different thing depending on the ghost mode.
+        Ghost *ghostP = Ghost_getGhostAtLocation(newLoc);
+        if(ghostP==NULL) {
+            printf("ERROR: SHOULD NOT HAPPEN\n");
+        }
+        if (ghostP->mode == FRIGHTENED) {
+            printf("Ghost is caught!");
+            // TODO: Go back to ghost house.
+            moveGhostBackToGhostHouse(ghostP);
+        } else if (ghostP-> mode == CHASE) {
+            printf("Game over! Ghost caught Pacman.\n");
+            printScore();
+            Ghost_cleanup();
+            GameManager_gameover();
+            //GameManager_cleanup();
+        }
         return;
     }
     if (collision == POWER_DOT){
-        printf("POWER - special atm cannot move into it yet.\n");
+        printf("POWER - special.\n");
         currentScore+=150;
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
@@ -503,9 +522,14 @@ void GameManager_movePacman(Direction direction)
             printScore();
             Ghost_cleanup();
             GameManager_win();
+        } else {
+            Ghost_changeAllGhostMode(FRIGHTENED);
+            ghost.color=WHITE;
         }
     }
-    if (collision==DOT||collision==EMPTY){
+
+        
+    if (collision==DOT||collision==EMPTY||collision==POWER_DOT){
         pthread_mutex_lock(&mutex);
         {
             gameMap[pacmanLocation.row][pacmanLocation.col] = empty;
@@ -526,8 +550,17 @@ void GameManager_movePacman(Direction direction)
             GameManager_win();
         }
     }
+    
     return;
 }
+static void moveGhostBackToGhostHouse(Ghost *ghostP) {
+    // ghostP->location = ghostP->homeLocation;
+    // ghostP->currentDirection = ghostP->LEFT;
+    // ghostP->mode = PAUSED;
+
+    //Ghost_decreaseActiveGhostCount();
+}
+
 int checkCollision(Location loc)
 {
     Tile tile;
@@ -536,20 +569,7 @@ int checkCollision(Location loc)
         tile = gameMap[loc.row][loc.col];
     }
     pthread_mutex_unlock(&mutex);
-
-    if (tile.tileType == WALL){
-        return WALL;
-    }
-    if (tile.tileType == DOT){
-        return DOT;
-    }
-    if (tile.tileType == GHOST){
-        return GHOST;
-    }
-    if (tile.tileType == POWER_DOT){
-        return POWER_DOT;
-    }
-    return EMPTY;
+    return tile.tileType;
 }
 void checkOutOfBounds(Location* loc)
 {

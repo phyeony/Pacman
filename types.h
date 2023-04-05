@@ -17,4 +17,9 @@ typedef struct {
     int col;
 } Offset;
 
+typedef struct {
+    int row;
+    int col;
+} Location;
+
 #endif

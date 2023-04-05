@@ -43,11 +43,6 @@ typedef struct
     Color color;
 } Tile;
 
-typedef struct {
-    int row;
-    int col;
-} Location;
-
 extern Tile empty;
 extern Tile pacman;
 extern Tile wall;

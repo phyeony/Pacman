@@ -1,5 +1,7 @@
 #include "ghost.h"
 #include "utility.h"
+#include "types.h"
+#include "map.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,30 +20,59 @@ static pthread_t id;
 
 void* startMovingGhosts();
 static GhostCallback movementCallback;
+static GhostColorChangeCallback changeGhostColorCallback;
 
-// Ghost *getGhostAtLocation(int row, int col) {
-//     for (int i = 0; i < GHOST_NUM; i++) {
-//         if (ghosts[i].location.row == row && ghosts[i].location.col == col) {
-//             return &ghosts[i];
-//         }
-//     }
-//     return NULL;
-// }
+Ghost *Ghost_getGhostAtLocation(Location targetLocation) {
+    // location is initialized in Ghost_init and GameManagmer_moveGhost
+    for (int i = 0; i < GHOST_NUM; i++) {
+        if (ghosts[i].location.row == targetLocation.row && ghosts[i].location.col == targetLocation.col) {
+            return &ghosts[i];
+        }
+    }
+    return NULL;
+}
 
-void Ghost_registerCallback(GhostCallback newCallback)
+void Ghost_changeAllGhostMode(GhostMode newMode) {
+    for (int i = 0; i < GHOST_NUM; i++) {
+        ghosts[i].mode = newMode;
+        if(newMode == FRIGHTENED) {
+            ghosts[i].modeStartTimeInMs = Utility_getCurrentTimeInMs();
+        }
+    }
+}
+
+void Ghost_registerCallback(GhostCallback newCallback, GhostColorChangeCallback newColorCallback)
 {
     movementCallback = newCallback;
+    changeGhostColorCallback = newColorCallback;
+}
+
+void Ghost_decreaseActiveGhostCount() {
+    activeGhosts--;
 }
 
 void* startMovingGhosts()
 {
 
-    
+    Utility_sleepForMs(1000); 
     while (running) {
 
         // logic for chasing only, have to change when implement frightened
-        // Utility_sleepForMs(1000);
         for (int i = 0; i < activeGhosts; i++){
+            if(ghosts[i].mode == FRIGHTENED) {
+                printf("Time Passed: %lld, Time Left: %lld \n", Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs, FRIGHTENED_DURATION_MS - (Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs));
+            }
+            if(ghosts[i].mode == FRIGHTENED &&  Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS - FRIGHTENED_GHOST_TRANSITION_DURATION_MS) {
+                (*changeGhostColorCallback)(WHITE);
+                (*changeGhostColorCallback)(RED);
+                (*changeGhostColorCallback)(WHITE);
+                // TODO: NOT SURE IF THIS WILL WORK.
+            }  
+            if(ghosts[i].mode == FRIGHTENED && Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS) {
+                ghosts[i].mode = CHASE;
+                ghosts[i].modeStartTimeInMs = 0;
+                (*changeGhostColorCallback)(RED);
+            }
             (*movementCallback)(&ghosts[i]);
             Utility_sleepForMs(GHOST_SPEED_DELAY);
         }
