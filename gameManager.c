@@ -602,6 +602,7 @@ void GameManager_movePacman(Direction direction)
             GameManager_win();
         }
     }
+
     return;
 }
 
