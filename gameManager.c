@@ -365,9 +365,9 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 newDirection = oppositeDirection(direction);
             }
         }
-        // if (newLoc.row == 2 && newLoc.col ==2 ) {
-        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-        // }
+        if (newLoc.row == 2 && newLoc.col ==2 ) {
+            printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+        }
     } else {
         // printf("Intersection! :%s\n", currentGhost->name);
         // * On intersection, perform each mode's algorithm to get the new Ghost location
@@ -386,14 +386,14 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 //printf("ON INTERSEC NO CHASE OR FRIGHTENED MODE??");
                 break;
         }
-        // if (newLoc.row == 2 && newLoc.col ==2 ) {
-        //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-        // }
+        if (newLoc.row == 2 && newLoc.col ==2 ) {
+            printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+        }
         newDirection = getNewDirectionFromLocations(currentGhost->location, newLoc);
     }
-    // if (newLoc.row == 2 && newLoc.col ==2 ) {
-    //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
-    // }   
+    if (newLoc.row == 2 && newLoc.col ==2 ) {
+        printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+    }   
 
     // Step 2: Move ghost towards new location
     pthread_mutex_lock(&mutex);
