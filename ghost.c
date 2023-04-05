@@ -73,11 +73,11 @@ void* startMovingGhosts()
                 printf("Time Passed: %lld, Time Left: %lld \n", Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs, FRIGHTENED_DURATION_MS - (Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs));
             }
             if(ghosts[i].mode == FRIGHTENED &&  Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS - FRIGHTENED_GHOST_TRANSITION_DURATION_MS) {
-                (*changeGhostColorCallback)(WHITE);
+                //(*changeGhostColorCallback)(WHITE);
                 // Utility_sleepForMs(100);
-                (*changeGhostColorCallback)(RED);
+                //(*changeGhostColorCallback)(RED);
                 // Utility_sleepForMs(100);
-                (*changeGhostColorCallback)(WHITE);
+                //(*changeGhostColorCallback)(WHITE);
                 // Utility_sleepForMs(100);
                 // TODO: NOT SURE IF THIS WILL WORK.
             }   

@@ -448,9 +448,9 @@ static Direction getNewDirectionFromLocations(Location currentLocation, Location
     }
 }
 
-void GameManager_changeAllGhostColor(Color color)
+void GameManager_changeAllGhostColor(Color newColor)
 {
-    ghost.color=color;
+    ghost.color=newColor;
 }
 
 // moves Pacman in static game map. 
