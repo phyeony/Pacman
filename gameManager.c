@@ -387,12 +387,12 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 break;
         }
         if (newLoc.row == 2 && newLoc.col ==2 ) {
-            printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+            printf("ERROR: IN INTERSEcTION%s\n", currentGhost->name);
         }
         newDirection = getNewDirectionFromLocations(currentGhost->location, newLoc);
     }
     if (newLoc.row == 2 && newLoc.col ==2 ) {
-        printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+        printf("ERROR: Somewhere else%s\n", currentGhost->name);
     }   
 
     // Step 2: Move ghost towards new location
@@ -411,7 +411,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
     // Step 3: Check for collision with pacman
     if (newLoc.row == pacmanLocation.row && newLoc.col == pacmanLocation.col) {
         if(currentGhost->mode == FRIGHTENED) {
-            printf("Ghost is caught!");
+            printf("Ghost is caught!\n");
             //moveGhostBackToGhostHouse(currentGhost);
             // TODO: Go back to ghost house.
         } else {
