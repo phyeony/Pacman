@@ -18,7 +18,7 @@ udpServer.on('message', (msg, rinfo) => {
     console.log("commandName: ",commandName);
     console.log("args: ",arg);
     console.log("rest: ",rest);
-    io.emit(commandName, arg);
+    io.emit(commandName, arg, rest);
 });
 
 udpServer.on('listening', () => {

@@ -274,11 +274,13 @@ void GameManager_win()
     }
 }
 
-void GameManager_getMap(Tile temp[][COLUMN_SIZE])
+void GameManager_getData(Tile temp[][COLUMN_SIZE], int *currentScoreP, int *highScoreP)
 {
     pthread_mutex_lock(&mutex);
     {
         memcpy(temp, gameMap, ROW_SIZE * COLUMN_SIZE * sizeof(gameMap[0][0]));
+        *currentScoreP = currentScore;
+        *highScoreP = highScore;
     }
     pthread_mutex_unlock(&mutex);
 }
@@ -299,15 +301,23 @@ static Direction oppositeDirection(Direction dir) {
 
 void printScore(){
     gameOver = 1;
+    pthread_mutex_lock(&mutex);
+    {
+        if (currentScore > highScore){
+            highScore = currentScore;
+            printf("New high score: %d\n",highScore);
+        }
+    }
+    pthread_mutex_unlock(&mutex);
     if (currentScore > highScore){
         highScore = currentScore;
-        printf("New high score: %d\n",highScore);
     }
     else {
         printf("Your score: %d\nHigh score: %d\n",currentScore,highScore);
     }
     printf("Would you like to restart? Press Y to accept, otherwise press B to exit game\n");
 }
+
 void GameManager_moveGhost(Ghost* currentGhost) 
 {
     // TODO: Currently, if 2 ghosts are coming towards from a different direction, they will collide and stay stuck forever.
@@ -503,6 +513,7 @@ void GameManager_movePacman(Direction direction)
         if (ghostP->mode == FRIGHTENED) {
             printf("Ghost is caught!\n");
             // TODO: Go back to ghost house.
+            updateCurrentScore(500);
             moveGhostBackToGhostHouse(ghostP);
         } else if (ghostP-> mode == CHASE) {
             printf("Game over! Ghost caught Pacman.\n");
@@ -515,7 +526,8 @@ void GameManager_movePacman(Direction direction)
     }
     if (collision == POWER_DOT){
         printf("POWER - special.\n");
-        currentScore+=150;
+        updateCurrentScore(150);
+
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
         if (totalFoodCount==0){
@@ -542,7 +554,7 @@ void GameManager_movePacman(Direction direction)
     }
     if (collision==DOT){
         totalFoodCount--;
-        currentScore+=100;
+        updateCurrentScore(100);
         // for testing - just eat 11 dots to win, full implementation win when total = 0
         if (totalFoodCount==0){
             printf("\n\nYou won!!\n");
@@ -554,6 +566,15 @@ void GameManager_movePacman(Direction direction)
 
     return;
 }
+
+static void updateCurrentScore(int addition) {
+    pthread_mutex_lock(&mutex);
+    {
+        currentScore += addition;
+    }
+    pthread_mutex_unlock(&mutex);
+}
+
 static void moveGhostBackToGhostHouse(Ghost *ghostP) {
    
     Location newLoc;
@@ -567,6 +588,8 @@ static void moveGhostBackToGhostHouse(Ghost *ghostP) {
         // what if the ghost was on dot ?
         gameMap[ghostP->location.row][ghostP->location.col] = ghostP->currentTile;
         gameMap[newLoc.row][newLoc.col] = ghost;
+
+        // might be able to get away without mutex.
         ghostP->location = newLoc;
         ghostP->mode = FRIGHTENED;
         if(ghostP->id == 0) {

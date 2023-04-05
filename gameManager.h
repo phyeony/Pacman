@@ -15,10 +15,10 @@
 
 void GameManager_init(int first_init);
 void GameManager_initializeMap();
-void GameManager_getMap(Tile map[][COLUMN_SIZE]);
 void GameManager_cleanup(void);
 void GameManager_movePacman(Direction direction);
 void GameManager_moveGhost();
 void GameManager_changeAllGhostColor(Color color);
+void GameManager_getData(Tile map[][COLUMN_SIZE], int *currentScore, int *highScore);
 
 #endif

@@ -76,6 +76,10 @@ $(document).ready(() => {
         updateMap(table, gameMap);
     })
 
+    socket.on('updateScoreAnswer', function (result) {
+        console.log("RESULT: ", result);
+    });
+    
     // show error
     const showError = () => {
         $("#error-box").show();

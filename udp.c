@@ -83,7 +83,12 @@ static void *updateData(char *args)
     const char *answerString = "updateMapAnswer ";
     //size_t answerStringLength = strlen(answerString);
     Tile gameMap[ROW_SIZE][COLUMN_SIZE];
-    GameManager_getMap(gameMap);
+    int currentScore = 0;
+    int highScore = 0;
+    GameManager_getData(gameMap, &currentScore, &highScore);
+    sin_len = sizeof(sinRemote);
+    snprintf(messageToReply, MAX_LEN, "updateScoreAnswer %d %d", currentScore, highScore);
+    sendto(socketDescriptor, messageToReply, strlen(messageToReply), 0, (struct sockaddr *)&sinRemote, sin_len);
 
     size_t dataLength = ROW_SIZE * COLUMN_SIZE * sizeof(int);
     int data[dataLength];
