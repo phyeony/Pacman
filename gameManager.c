@@ -502,6 +502,7 @@ void GameManager_movePacman(Direction direction)
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
+            GameManager_win();
         }
     }
     if (collision==DOT||collision==EMPTY){
@@ -522,6 +523,7 @@ void GameManager_movePacman(Direction direction)
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
+            GameManager_win();
         }
     }
     return;
