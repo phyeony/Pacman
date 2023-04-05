@@ -5,6 +5,9 @@
  */
 
 #include <alsa/asoundlib.h>
+#include <stdbool.h>
+#include <alloca.h>
+#include "wave_player.h"
 
 // File used for play-back:
 // If cross-compiling, must have this file available, via this relative path,
@@ -20,6 +23,8 @@
 #define SAMPLE_RATE   44100
 #define NUM_CHANNELS  1
 #define SAMPLE_SIZE   (sizeof(short)) 	// bytes per sample
+#define DEFAULT_VOLUME 80
+#define MAX_VOLUME 100
 
 // Store data of a single wave file read into memory.
 // Space is dynamically allocated; must be freed correctly!
@@ -29,6 +34,7 @@ typedef struct {
 } wavedata_t;
 
 static snd_pcm_t *handle;
+static int volume = DEFAULT_VOLUME;
 
 // Prototypes:
 snd_pcm_t *Audio_openDevice();
@@ -45,6 +51,7 @@ wavedata_t extraPacFile;
 void WavePlayer_init(void)
 {
 	printf("Init Wave Player...\n");
+	setVolume(DEFAULT_VOLUME);
 
 	// Configure Output Device
 	handle = Audio_openDevice();
@@ -194,4 +201,58 @@ void Audio_playFile(wavedata_t *pWaveData)
 	}
 	if (frames > 0 && frames < pWaveData->numSamples)
 		printf("Short write (expected %d, wrote %li)\n", pWaveData->numSamples, frames);
+}
+
+// Function copied from:
+// http://stackoverflow.com/questions/6787318/set-alsa-master-volume-from-c-code
+// Written by user "trenki".
+void setVolume(int newVolume)
+{
+	// Ensure volume is reasonable; If so, cache it for later getVolume() calls.
+	if (newVolume < 0 || newVolume > MAX_VOLUME) {
+		printf("ERROR: Volume must be between 0 and 100.\n");
+		return;
+	}
+	volume = newVolume;
+
+    long min, max;
+    snd_mixer_t *volHandle;
+    snd_mixer_selem_id_t *sid;
+    const char *card = "default";
+    const char *selem_name = "PCM";
+
+    snd_mixer_open(&volHandle, 0);
+    snd_mixer_attach(volHandle, card);
+    snd_mixer_selem_register(volHandle, NULL, NULL);
+    snd_mixer_load(volHandle);
+
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    snd_mixer_elem_t* elem = snd_mixer_find_selem(volHandle, sid);
+
+    snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+    snd_mixer_selem_set_playback_volume_all(elem, volume * max / 100);
+
+    snd_mixer_close(volHandle);
+}
+
+int getVolume()
+{
+	// Return the cached volume; good enough unless someone is changing
+	// the volume through other means and the cached value is out of date.
+	return volume;
+}
+
+// Control the output volume in range [0, 100] (inclusive), default 80
+void controlVolume(bool increase)
+{
+	if (increase) {
+		volume = volume + 5 >= 100 ? 100 : volume + 5;
+	}
+	else {
+		volume = volume - 5 <= 0 ? 0 : volume - 5;
+	}
+
+	setVolume(volume);
 }
