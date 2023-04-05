@@ -419,6 +419,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
             printf("Game over! Ghost caught Pacman.\n");
             printScore();
             Ghost_cleanup();
+            GameManager_gameover();
         }
     }
 }
@@ -489,6 +490,7 @@ void GameManager_movePacman(Direction direction)
         printf("Ghost caught pacman, game over!\n");
         printScore();
         Ghost_cleanup();
+        GameManager_gameover();
         return;
     }
     if (collision == POWER_DOT){
