@@ -96,7 +96,9 @@ void* startMovingGhosts()
         }
         if (headStart == 10){
             headStart = 0;
-            ghosts[tempActiveGhosts].mode = CHASE;
+            if(ghosts[tempActiveGhosts].mode == PAUSED) {
+                ghosts[tempActiveGhosts].mode = CHASE;
+            }
             if(ghosts[tempActiveGhosts].id == 0) {
                 ghosts[tempActiveGhosts].currentDirection = IDLE_STATE; // the first ghost should be able to move anywhere except down.
             } else {
