@@ -54,7 +54,7 @@ void GameManager_init(int first_init)
     printf("foodcount %d\n",totalFoodCount);
     Joycon_registerCallback(&GameManager_movePacman);
     ZenCapeJoystick_registerCallback(&GameManager_movePacman);
-    LEDDisplay_registerCallback(&GameManager_getMap);
+    LEDDisplay_registerCallback(&GameManager_getData);
 }
 
 void GameManager_initializeMap(){
