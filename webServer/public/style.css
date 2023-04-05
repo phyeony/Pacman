@@ -68,8 +68,9 @@ td {
 }
 
 #game-over-text {
+  margin-top: 10pt;
   display: none;
-  font-size: 20px;
+  font-size: 30px;
 }
 
 .item-container {
