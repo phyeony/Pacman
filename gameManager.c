@@ -30,7 +30,7 @@ static Location ghostHouseEntrance;
 static Location ghostHouse[GHOST_NUM-1];
 static Location intersections[MAX_INTERSECTION_SIZE];
 static int intersectionsCount = 0;
-
+static int totalFoodCount = 0;
 static Offset offsets[] = {
     [UP] = { .row = -1, .col = 0 },
     [DOWN] = { .row = 1, .col = 0 },
@@ -38,16 +38,31 @@ static Offset offsets[] = {
     [RIGHT] = { .row = 0, .col = 1 },
 };
 
-static int foodCollected = 0;
-
+static int highScore = 0;
+static int currentScore = 0;
+static int gameOver = 0;
 // Prototypes for helper functions
 int checkCollision(Location loc);
 void checkOutOfBounds(Location* loc);
 // static void GameManager_moveGhost(Ghost *);
 
-void GameManager_init()
+void GameManager_init(int first_init)
 {
     srand(time(NULL));   // Initialization, should only be called once.
+    GameManager_initializeMap();
+    printf("foodcount %d\n",totalFoodCount);
+    Joycon_registerCallback(&GameManager_movePacman);
+    ZenCapeJoystick_registerCallback(&GameManager_movePacman);
+    LEDDisplay_registerCallback(&GameManager_getMap);
+    
+    
+
+}
+
+void GameManager_initializeMap(){
+    gameOver = 0;
+    totalFoodCount = 0;
+    currentScore = 0;
     // Reset the screen
     memset(gameMap, 0, sizeof(gameMap));
     // pacman start position: mapBottomLeft[4][15]
@@ -111,6 +126,9 @@ void GameManager_init()
                 pacmanLocation.row = i;
                 pacmanLocation.col = j;
             }
+            if (gameMap[i][j].tileType==DOT || gameMap[i][j].tileType==POWER_DOT ){
+                totalFoodCount++;
+            }
             if (ghostCount < GHOST_NUM && gameMap[i][j].tileType==GHOST){
                 if (!ghostCount){
                     ghostHouseEntrance.row = i;
@@ -148,15 +166,11 @@ void GameManager_init()
             }
         }
     }
-
     // Init Ghost
     Ghost_init(ghostHouseEntrance,ghostHouse);
     Ghost_registerCallback(&GameManager_moveGhost);
-    Joycon_registerCallback(&GameManager_movePacman, &GameManager_cleanup);
-    ZenCapeJoystick_registerCallback(&GameManager_movePacman);
-    LEDDisplay_registerCallback(&GameManager_getMap);
-
 }
+<<<<<<< HEAD
 
 void GameManager_gameover()
 {
@@ -211,6 +225,8 @@ void GameManager_gameover()
     }
 }
 
+=======
+>>>>>>> 12f8077849471991c8e8dac65df7c267ba520ec9
 void GameManager_getMap(Tile temp[][COLUMN_SIZE])
 {
     pthread_mutex_lock(&mutex);
@@ -234,7 +250,17 @@ static Direction oppositeDirection(Direction dir) {
     }
 }
 
-
+void printScore(){
+    gameOver = 1;
+    if (currentScore > highScore){
+        highScore = currentScore;
+        printf("New high score: %d\n",highScore);
+    }
+    else {
+        printf("Your score: %d\nHigh score: %d\n",currentScore,highScore);
+    }
+    printf("Would you like to restart? Press Y to accept, otherwise press B to exit game\n");
+}
 void GameManager_moveGhost(Ghost* currentGhost) 
 {
     // TODO: Currently, if 2 ghosts are coming towards from a different direction, they will collide and stay stuck forever.
@@ -249,7 +275,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
     // Step 1: Get the new Ghost location
     // * Move along the path if the ghost is not on interection with more than 3 valid
     if(!isIntersection(row, col)) {
-        printf("Not intersection! :%s\n", currentGhost->name);
+        // printf("Not intersection! :%s\n", currentGhost->name);
         int surroundingGhosts = 0; 
 
         // Check all possible directions
@@ -296,7 +322,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
         //     printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
         // }
     } else {
-        printf("Intersection! :%s\n", currentGhost->name);
+        // printf("Intersection! :%s\n", currentGhost->name);
         // * On intersection, perform each mode's algorithm to get the new Ghost location
         switch (currentGhost->mode)
         {
@@ -341,7 +367,8 @@ void GameManager_moveGhost(Ghost* currentGhost)
             // TODO: Go back to ghost house.
         } else {
             printf("Game over! Ghost caught Pacman.\n");
-            GameManager_cleanup();
+            printScore();
+            Ghost_cleanup();
         }
     }
 }
@@ -389,6 +416,18 @@ void GameManager_movePacman(Direction direction)
         newLoc.col = pacmanLocation.col+1;
         newLoc.row = pacmanLocation.row;
     }
+    else if (direction == BUTTON_B){
+        GameManager_cleanup();
+        return;
+        // exit game turn off screen
+    }
+    else if (direction == BUTTON_Y && gameOver){
+       GameManager_initializeMap();
+       return;
+    }
+    else {
+        return;
+    }
     // printf("new loc:%d,%d!\n",newLoc.row,newLoc.col);
     checkOutOfBounds(&newLoc);
     int collision = checkCollision(newLoc);
@@ -398,7 +437,20 @@ void GameManager_movePacman(Direction direction)
     }
     if (collision == GHOST){
         printf("Ghost caught pacman, game over!\n");
+        printScore();
+        Ghost_cleanup();
         return;
+    }
+    if (collision == POWER_DOT){
+        printf("POWER - special atm cannot move into it yet.\n");
+        currentScore+=150;
+        totalFoodCount--;
+        // for testing - just eat 11 dots to win, full implementation win when total = 0
+        if (totalFoodCount<200){
+            printf("\n\nYou won!!\n");
+            printScore();
+            Ghost_cleanup();
+        }
     }
     if (collision==DOT||collision==EMPTY){
         pthread_mutex_lock(&mutex);
@@ -411,7 +463,14 @@ void GameManager_movePacman(Direction direction)
         pthread_mutex_unlock(&mutex);
     }
     if (collision==DOT){
-        foodCollected++;
+        totalFoodCount--;
+        currentScore+=100;
+        // for testing - just eat 11 dots to win, full implementation win when total = 0
+        if (totalFoodCount<200){
+            printf("\n\nYou won!!\n");
+            printScore();
+            Ghost_cleanup();
+        }
     }
     return;
 }
@@ -432,6 +491,9 @@ int checkCollision(Location loc)
     }
     if (tile.tileType == GHOST){
         return GHOST;
+    }
+    if (tile.tileType == POWER_DOT){
+        return POWER_DOT;
     }
     return EMPTY;
 }
@@ -565,5 +627,6 @@ static Location dijkstra(Location ghostLoc, Location pacmanLoc) {
 
 void GameManager_cleanup()
 {
+    LedDisplay_quitGame();
     Ghost_cleanup();
 }

@@ -351,7 +351,10 @@ void LedDisplay_init(void)
     }
 
 }
-
+void LedDisplay_quitGame()
+{
+    pthread_cancel(id);
+}
 
 void LedDisplay_cleanup(void)
 {

@@ -7,7 +7,9 @@ typedef enum
     DOWN,
     LEFT,
     RIGHT,
-    IDLE_STATE
+    IDLE_STATE,
+    BUTTON_B,
+    BUTTON_Y
 } Direction;
 
 typedef struct {

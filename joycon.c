@@ -10,12 +10,10 @@ static libusb_context *ctx;
 static libusb_device_handle *dev_handle;
 static ssize_t cnt;
 static JoyconCallback cb;
-static ShutdownCallback shutdownCb;
 // this function is to be called by gameManager to pass in a function pointer that moves pacman
-void Joycon_registerCallback(JoyconCallback onJoyconInput, ShutdownCallback managerShutdown)
+void Joycon_registerCallback(JoyconCallback onJoyconInput)
 {
     cb = onJoyconInput;
-    shutdownCb = managerShutdown;
 }
 
 void *Joycon_init(void)
@@ -64,6 +62,15 @@ void Joycon_cleanup(void)
     libusb_exit(ctx);
     pthread_join(joyconThreadId, NULL);
 }
+void Joycon_quitGame(void)
+{
+    printf("stopping joycon thread\n");
+    running = 0;
+    libusb_release_interface(dev_handle, 0);
+    libusb_close(dev_handle);
+    libusb_exit(ctx);
+    pthread_cancel(joyconThreadId);
+}
 
 void *joyconThread()
 {
@@ -89,8 +96,13 @@ void *joyconThread()
         // printf("\n");
         if (data[3] == 0x20)
         {
-            (*shutdownCb)();
             printf("exit pressed\n");
+            (*cb)(BUTTON_B);
+        }
+        if (data[3] == 0x80)
+        {
+            (*cb)(BUTTON_Y);
+            printf("Y pressed\n");
         }
         if (data[8] == 0xff && data[9] == 0x7f)
         {

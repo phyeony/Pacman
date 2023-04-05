@@ -4,5 +4,6 @@
 typedef void (*LEDDisplayCallback)(Tile temp[][COLUMN_SIZE]);
 void LedDisplay_init(void);
 void LedDisplay_cleanup(void);
+void LedDisplay_quitGame();
 void LEDDisplay_registerCallback(LEDDisplayCallback getMapCb);
 #endif
