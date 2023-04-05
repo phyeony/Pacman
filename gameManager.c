@@ -4,6 +4,7 @@
 #include "ledDisplay.h"
 #include "joycon.h"
 #include "zenCapeJoystick.h"
+#include "wave_player.h"
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
