@@ -364,11 +364,10 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 newLoc.col = col + offsets[oppositeDirection(direction)].col;
                 newDirection = oppositeDirection(direction);
             }
-        } else {
-            return;
-        }
+        } 
         if (newLoc.row == 2 && newLoc.col ==2 ) {
             printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
+            return;
         }
     } else {
         // printf("Intersection! :%s\n", currentGhost->name);
@@ -391,6 +390,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
         }
         if (newLoc.row == 2 && newLoc.col ==2 ) {
             printf("ERROR: IN INTERSEcTION%s\n", currentGhost->name);
+            return;
         }
         newDirection = getNewDirectionFromLocations(currentGhost->location, newLoc);
     }
