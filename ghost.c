@@ -17,6 +17,7 @@ static int running = 1;
 static int headStart = 9;
 
 static pthread_t id;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* startMovingGhosts();
 static GhostCallback movementCallback;
@@ -48,7 +49,11 @@ void Ghost_registerCallback(GhostCallback newCallback, GhostColorChangeCallback 
 }
 
 void Ghost_decreaseActiveGhostCount() {
-    activeGhosts--;
+    pthread_mutex_lock(&mutex);
+    {
+        activeGhosts--;
+    }
+    pthread_mutex_unlock(&mutex);
 }
 
 void* startMovingGhosts()
@@ -56,9 +61,14 @@ void* startMovingGhosts()
 
     Utility_sleepForMs(1000); 
     while (running) {
-
+        int tempActiveGhosts = 0;
+        pthread_mutex_lock(&mutex);
+        {
+            tempActiveGhosts = activeGhosts;
+        }
+        pthread_mutex_unlock(&mutex);
         // logic for chasing only, have to change when implement frightened
-        for (int i = 0; i < activeGhosts; i++){
+        for (int i = 0; i < tempActiveGhosts; i++){
             if(ghosts[i].mode == FRIGHTENED) {
                 printf("Time Passed: %lld, Time Left: %lld \n", Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs, FRIGHTENED_DURATION_MS - (Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs));
             }
@@ -79,18 +89,23 @@ void* startMovingGhosts()
             (*movementCallback)(&ghosts[i]);
             Utility_sleepForMs(GHOST_SPEED_DELAY);
         }
-        if (activeGhosts < 4){
+        if (tempActiveGhosts < 4){
             headStart++;
         }
         if (headStart == 10){
             headStart = 0;
-            ghosts[activeGhosts].mode = CHASE;
-            if(ghosts[activeGhosts].id == 0) {
-                ghosts[activeGhosts].currentDirection = IDLE_STATE; // the first ghost should be able to move anywhere except down.
+            ghosts[tempActiveGhosts].mode = CHASE;
+            if(ghosts[tempActiveGhosts].id == 0) {
+                ghosts[tempActiveGhosts].currentDirection = IDLE_STATE; // the first ghost should be able to move anywhere except down.
             } else {
-                ghosts[activeGhosts].currentDirection = LEFT; // entrance is on the left.
+                ghosts[tempActiveGhosts].currentDirection = LEFT; // entrance is on the left.
             }
-            activeGhosts++;
+            pthread_mutex_lock(&mutex);
+            {
+                activeGhosts++;
+            }
+            pthread_mutex_unlock(&mutex);
+
         }
     }
     return NULL;
