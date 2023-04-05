@@ -13,7 +13,8 @@
  */
 
 
-void GameManager_init(void);
+void GameManager_init(int first_init);
+void GameManager_initializeMap();
 void GameManager_getMap(Tile map[][COLUMN_SIZE]);
 void GameManager_cleanup(void);
 void GameManager_movePacman(Direction direction);

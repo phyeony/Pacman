@@ -9,8 +9,8 @@
 #define ENDPOINT 0x81
 
 typedef void (*JoyconCallback)(Direction direction);
-typedef void (*ShutdownCallback)();
 void* Joycon_init(void);
 void Joycon_cleanup(void);
-void Joycon_registerCallback(JoyconCallback callback, ShutdownCallback shutdown);
+void Joycon_quitGame(void);
+void Joycon_registerCallback(JoyconCallback callback);
 #endif

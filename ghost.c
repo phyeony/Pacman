@@ -12,6 +12,8 @@ static Ghost ghosts[GHOST_NUM]={
 };
 static int activeGhosts = 0;
 static int running = 1;
+static int headStart = 9;
+
 static pthread_t id;
 
 void* startMovingGhosts();
@@ -33,13 +35,12 @@ void Ghost_registerCallback(GhostCallback newCallback)
 
 void* startMovingGhosts()
 {
-    int headStart = 9;
 
     
     while (running) {
 
         // logic for chasing only, have to change when implement frightened
-        Utility_sleepForMs(1000);
+        // Utility_sleepForMs(1000);
         for (int i = 0; i < activeGhosts; i++){
             (*movementCallback)(&ghosts[i]);
             Utility_sleepForMs(GHOST_SPEED_DELAY);
@@ -65,6 +66,9 @@ void* startMovingGhosts()
 // i think game manager should start ghost thread because the existence of ghosts depends on the existence of a map?
 void Ghost_init(Location ghostEntrance, Location otherGhosts[])
 {
+    running = 1;
+    headStart = 9;
+    activeGhosts = 0;
     ghosts[0].location = ghostEntrance;
     ghosts[0].currentTile = empty;
     for (int i = 1; i < GHOST_NUM; i++){
@@ -74,6 +78,9 @@ void Ghost_init(Location ghostEntrance, Location otherGhosts[])
     if (pthread_create(&id, NULL, &startMovingGhosts, NULL) != 0)
     {
         perror("Failed to create a new thread...");
+    }
+    else{
+        // printf("Init ghosts...\n");
     }
 }
 
