@@ -568,10 +568,10 @@ static void moveGhostBackToGhostHouse(Ghost *ghostP) {
         gameMap[ghostP->location.row][ghostP->location.col] = ghostP->currentTile;
         gameMap[newLoc.row][newLoc.col] = ghost;
         ghostP->location = newLoc;
-        ghostP->mode = PAUSED;
+        ghostP->mode = CHASE;
         ghostP->currentDirection = IDLE_STATE;
         ghostP->currentTile = empty;
-        Ghost_decreaseActiveGhostCount();
+        //Ghost_decreaseActiveGhostCount();
     }
     pthread_mutex_unlock(&mutex);
 }

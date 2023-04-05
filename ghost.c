@@ -62,11 +62,11 @@ void* startMovingGhosts()
     Utility_sleepForMs(1000); 
     while (running) {
         int tempActiveGhosts = 0;
-        pthread_mutex_lock(&mutex);
-        {
+        // pthread_mutex_lock(&mutex);
+        // {
             tempActiveGhosts = activeGhosts;
-        }
-        pthread_mutex_unlock(&mutex);
+        // }
+        // pthread_mutex_unlock(&mutex);
         // logic for chasing only, have to change when implement frightened
         for (int i = 0; i < tempActiveGhosts; i++){
             if(ghosts[i].mode == FRIGHTENED) {
@@ -81,11 +81,12 @@ void* startMovingGhosts()
                 // Utility_sleepForMs(100);
                 // TODO: NOT SURE IF THIS WILL WORK.
             }  
-            if((ghosts[i].mode == FRIGHTENED || ghosts[i].mode == PAUSED)&& Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS) {
+            if(ghosts[i].mode == FRIGHTENED && Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS) {
                 ghosts[i].mode = CHASE;
                 ghosts[i].modeStartTimeInMs = 0;
                 (*changeGhostColorCallback)(RED);
             }
+            // if(ghosts[i].mode == PAUSED && Utilty_)
             (*movementCallback)(&ghosts[i]);
             Utility_sleepForMs(GHOST_SPEED_DELAY);
         }
