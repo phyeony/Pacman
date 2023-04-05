@@ -539,6 +539,7 @@ void GameManager_movePacman(Direction direction)
         Ghost *ghostP = Ghost_getGhostAtLocation(newLoc);
         if(ghostP==NULL) {
             printf("ERROR: SHOULD NOT HAPPEN\n");
+            return;
         }
         if (ghostP->mode == FRIGHTENED) {
             printf("Ghost is caught!\n");
