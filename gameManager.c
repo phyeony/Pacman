@@ -248,6 +248,11 @@ void GameManager_gameover()
 
 void GameManager_win()
 {
+    pthread_mutex_lock(&gameOverMutex);
+    {
+        gameOver = 1;
+    }
+    pthread_mutex_unlock(&gameOverMutex);
     Tile mapTopLeft[ROW_SIZE / 2][COLUMN_SIZE / 2] = {
         {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
         {empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty, empty},
@@ -563,7 +568,7 @@ void GameManager_movePacman(Direction direction)
         WavePlayer_playEatFruit();
         totalFoodCount--;
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount==0){
+        if (totalFoodCount<WIN_COND){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();
@@ -588,9 +593,9 @@ void GameManager_movePacman(Direction direction)
     if (collision==DOT){
         totalFoodCount--;
         updateCurrentScore(100);
-        //WavePlayer_playChomp();
+        // WavePlayer_playChomp();
         // for testing - just eat 11 dots to win, full implementation win when total = 0
-        if (totalFoodCount==0){
+        if (totalFoodCount<WIN_COND){
             printf("\n\nYou won!!\n");
             printScore();
             Ghost_cleanup();

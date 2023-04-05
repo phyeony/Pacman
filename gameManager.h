@@ -4,7 +4,7 @@
 #include "map.h"
 #include "joycon.h"
 
-
+#define WIN_COND 180
 /**
  *  Display supports only 8(2^3) colours. 
  *  Colours represented in integer is converted to bits in ledDisplay.c. 
