@@ -174,6 +174,7 @@ $(document).ready(() => {
     })
 
     socket.on("gameOverAnswer", function (result) {
+        console.log("RESULT:gameover ",result)
         if(result){
             $("#game-over-text").show();
         } else {
