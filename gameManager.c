@@ -364,6 +364,8 @@ void GameManager_moveGhost(Ghost* currentGhost)
                 newLoc.col = col + offsets[oppositeDirection(direction)].col;
                 newDirection = oppositeDirection(direction);
             }
+        } else {
+            return;
         }
         if (newLoc.row == 2 && newLoc.col ==2 ) {
             printf("ERROR: IN NOT INTERSEcTION%s\n", currentGhost->name);
@@ -384,6 +386,7 @@ void GameManager_moveGhost(Ghost* currentGhost)
             //     break;
             default:
                 //printf("ON INTERSEC NO CHASE OR FRIGHTENED MODE??");
+                return;
                 break;
         }
         if (newLoc.row == 2 && newLoc.col ==2 ) {
@@ -497,7 +500,7 @@ void GameManager_movePacman(Direction direction)
             printf("ERROR: SHOULD NOT HAPPEN\n");
         }
         if (ghostP->mode == FRIGHTENED) {
-            printf("Ghost is caught!");
+            printf("Ghost is caught!\n");
             // TODO: Go back to ghost house.
             moveGhostBackToGhostHouse(ghostP);
         } else if (ghostP-> mode == CHASE) {
