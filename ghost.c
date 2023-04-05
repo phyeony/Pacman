@@ -82,9 +82,10 @@ void* startMovingGhosts()
                 // TODO: NOT SURE IF THIS WILL WORK.
             }   
             if(ghosts[i].mode == FRIGHTENED && Utility_getCurrentTimeInMs() - ghosts[i].modeStartTimeInMs > FRIGHTENED_DURATION_MS) {
+                (*changeGhostColorCallback)(RED);
+                Utility_sleepForMs(100);
                 ghosts[i].mode = CHASE;
                 ghosts[i].modeStartTimeInMs = 0;
-                (*changeGhostColorCallback)(RED);
             }
             // if(ghosts[i].mode == PAUSED && Utilty_)
             (*movementCallback)(&ghosts[i]);
